@@ -1,4 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from app.database.mysql import Database
 from app.services.vehicle_service import VehicleService
 from app.services.demo_service import DemoService
@@ -8,6 +9,14 @@ from app.models.estado import Estado
 from app.services.status_service import StatusService
 
 app = FastAPI(title='API IoT - Práctica 2.5', description='FastAPI + POO + 21 procedimientos de Amazon RDS + WebSocket', version='2.5')
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 ws_manager = WebSocketManager()
 db = Database()
 vehicles = VehicleService(db)
