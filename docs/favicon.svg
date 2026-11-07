@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+  <!-- Fondo redondeado -->
+  <rect width="64" height="64" rx="14" fill="#111827"/>
+  <!-- Ruedas -->
+  <rect x="6"  y="40" width="12" height="10" rx="5" fill="#374151"/>
+  <rect x="46" y="40" width="12" height="10" rx="5" fill="#374151"/>
+  <!-- Cuerpo del vehículo -->
+  <rect x="10" y="26" width="44" height="22" rx="6" fill="url(#g)"/>
+  <!-- Cabina -->
+  <rect x="18" y="14" width="28" height="16" rx="5" fill="#2563eb" opacity="0.9"/>
+  <!-- Punto WiFi/IoT -->
+  <circle cx="50" cy="12" r="3" fill="#22c55e" opacity="0.9"/>
+  <circle cx="50" cy="12" r="6" fill="#22c55e" opacity="0.3"/>
+</svg>
