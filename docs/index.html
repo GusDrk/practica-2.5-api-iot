@@ -32,12 +32,18 @@
     <div class="app-logo">
       <div class="app-logo-icon" aria-hidden="true">🚗</div>
       <div>
-        <div class="app-title">IoT Vehicle Control</div>
-        <div class="app-subtitle">Vehículo #1 · Práctica 2.5</div>
+        <div class="app-title" id="vehicle-name">IoT Vehicle Control</div>
+        <div class="app-subtitle">
+          <span id="vehicle-id-label">Vehículo #1</span> · Práctica 2.5
+        </div>
       </div>
     </div>
-    <div style="font-size:0.72rem; color:var(--text-muted); text-align:right; line-height:1.4;">
-      FastAPI + POO<br>WebSocket
+    <!-- Badge de estado WS en header -->
+    <div class="header-status">
+      <span class="ws-badge" id="header-ws-badge" aria-label="Estado WebSocket">
+        <span class="ws-badge-dot" id="header-ws-dot"></span>
+        <span class="ws-badge-text" id="header-ws-text">Conectando…</span>
+      </span>
     </div>
   </header>
 
@@ -88,6 +94,7 @@
         <span class="action-text" id="last-action" role="status" aria-live="polite">
           Sin actividad — mueve el joystick o presiona un botón
         </span>
+        <span class="action-time" id="last-action-time" aria-label="Hora de última acción"></span>
       </div>
     </section>
 

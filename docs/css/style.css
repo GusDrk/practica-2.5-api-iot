@@ -75,6 +75,41 @@ p           { color: var(--text-secondary); line-height: 1.6; }
   backdrop-filter: blur(12px);
 }
 
+/* Badge WS en header */
+.header-status { flex-shrink: 0; }
+
+.ws-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+}
+
+.ws-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.ws-badge.online  { border-color: #22c55e30; }
+.ws-badge.online .ws-badge-dot  { background: var(--success); box-shadow: 0 0 6px var(--success); animation: pulse-green 2s infinite; }
+.ws-badge.online .ws-badge-text { color: var(--success); }
+
+.ws-badge.connecting .ws-badge-dot  { background: var(--warning); animation: pulse-amber 1.2s infinite; }
+.ws-badge.connecting .ws-badge-text { color: var(--warning); }
+
+.ws-badge.offline .ws-badge-dot  { background: var(--danger); }
+.ws-badge.offline .ws-badge-text { color: var(--danger); }
+
 .app-logo {
   display: flex;
   align-items: center;
@@ -214,6 +249,16 @@ p           { color: var(--text-secondary); line-height: 1.6; }
   min-height: 2.6rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.action-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
 .action-text {

@@ -11,7 +11,9 @@ import { SecondaryButtons } from './ui/buttons.js';
 import { ConnectivityPanel } from './ui/connectivity.js';
 import { DemoPanel }        from './ui/demo-panel.js';
 import { messageService }   from './ui/messages.js';
-import { COMMANDS }         from './config.js';
+import { COMMANDS, ENDPOINTS, CONFIG } from './config.js';
+import { http } from './api/http-client.js';
+import { WS_STATUS } from './ws/ws-client.js';
 
 /** Inicialización de la aplicación */
 function init() {
@@ -21,7 +23,10 @@ function init() {
   // 2. Panel de conectividad
   new ConnectivityPanel();
 
-  // 3. Joystick
+  // 3. Cargar nombre real del vehículo desde la API
+  loadVehicleName();
+
+  // 4. Joystick
   new Joystick('#joystick-container');
 
   // 4. Botones secundarios (Garra, Bocina)
@@ -75,51 +80,110 @@ function init() {
     }
   });
 
-  // 8. Reaccionar a estados del commandService → feedback visual global
+  // 9. Reaccionar a estados del commandService → feedback visual global
   commandService.addEventListener('cmd:state', (e) => {
     const { state, command, error } = e.detail;
-    const actionEl = document.getElementById('last-action');
+    const actionEl  = document.getElementById('last-action');
+    const timeEl    = document.getElementById('last-action-time');
     if (!actionEl) return;
+
+    const now = new Date().toLocaleTimeString('es-MX', { hour12: false });
 
     switch (state) {
       case CMD_STATE.SENDING:
         actionEl.textContent = `Enviando: ${command.nombre}…`;
         actionEl.className = 'action-text sending';
+        if (timeEl) timeEl.textContent = now;
         break;
       case CMD_STATE.ACCEPTED:
         actionEl.textContent = `✔ ${command.nombre}`;
         actionEl.className = 'action-text accepted';
+        if (timeEl) timeEl.textContent = now;
         break;
       case CMD_STATE.ERROR:
         actionEl.textContent = `✘ Error: ${error?.message ?? 'Sin respuesta'}`;
         actionEl.className = 'action-text error';
+        if (timeEl) timeEl.textContent = now;
         messageService.error(`Error al enviar ${command.nombre}: ${error?.message ?? 'Sin respuesta'}`);
         break;
     }
   });
 
-  // 9. Rutear eventos WebSocket a demoService
+  // 10. Rutear eventos WebSocket a demoService
   wsClient.addEventListener('ws:message', (e) => {
     const data = e.detail;
     demoService.handleWsEvent(data);
 
     // Log de evento en el panel de acción
     const actionEl = document.getElementById('last-action');
+    const timeEl   = document.getElementById('last-action-time');
+    const now = new Date().toLocaleTimeString('es-MX', { hour12: false });
     if (actionEl && data.tipo === 'movimiento') {
       actionEl.textContent = `📡 WS: ${data.comando} · código ${data.codigo} · ${data.origen}`;
       actionEl.className = 'action-text accepted';
+      if (timeEl) timeEl.textContent = now;
     }
   });
 
-  // 10. Feedback de conexión WebSocket
+  // 11. Feedback de conexión WebSocket + badge del header
   wsClient.addEventListener('ws:status', (e) => {
     const { status } = e.detail;
+    updateHeaderWsBadge(status);
     if (status === 'online') {
       messageService.success('WebSocket conectado');
     } else if (status === 'disconnected') {
       messageService.warning('WebSocket desconectado — reconectando…');
     }
   });
+
+  // Inicializar badge con estado actual
+  updateHeaderWsBadge(wsClient.status);
+}
+
+/**
+ * Carga el nombre real del vehículo desde GET /vehiculos/{id}
+ * y lo muestra en el header.
+ */
+async function loadVehicleName() {
+  try {
+    const url  = `${CONFIG.API_BASE_URL}/vehiculos/${CONFIG.VEHICLE_ID}`;
+    const data = await http.get(url);
+    if (data && data.nombre) {
+      const nameEl = document.getElementById('vehicle-name');
+      const idEl   = document.getElementById('vehicle-id-label');
+      if (nameEl) nameEl.textContent = data.nombre;
+      if (idEl)   idEl.textContent   = `Vehículo #${data.id_vehiculo ?? CONFIG.VEHICLE_ID}`;
+      document.title = `${data.nombre} · Control IoT`;
+    }
+  } catch {
+    // Si falla, mantiene el texto estático por defecto
+  }
+}
+
+/**
+ * Actualiza el badge de WebSocket en el header según el estado.
+ * @param {'online'|'connecting'|'disconnected'} status
+ */
+function updateHeaderWsBadge(status) {
+  const badge  = document.getElementById('header-ws-badge');
+  const text   = document.getElementById('header-ws-text');
+  if (!badge || !text) return;
+
+  badge.classList.remove('online', 'connecting', 'offline');
+
+  switch (status) {
+    case 'online':
+      badge.classList.add('online');
+      text.textContent = 'Conectado';
+      break;
+    case 'connecting':
+      badge.classList.add('connecting');
+      text.textContent = 'Reconectando…';
+      break;
+    default:
+      badge.classList.add('offline');
+      text.textContent = 'Desconectado';
+  }
 }
 
 // Esperar a que el DOM esté listo
@@ -128,3 +192,4 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+

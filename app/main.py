@@ -1,5 +1,7 @@
+import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.database.mysql import Database
 from app.services.vehicle_service import VehicleService
 from app.services.demo_service import DemoService
@@ -44,6 +46,11 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.receive_text()
     except WebSocketDisconnect:
         ws_manager.desconectar(websocket)
+
+# Servir frontend estático (HTML, CSS, JS) en la raíz
+frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'docs')
+if os.path.exists(frontend_path):
+    app.mount('/', StaticFiles(directory=frontend_path, html=True), name='frontend')
 
 if __name__ == '__main__':
     import uvicorn
