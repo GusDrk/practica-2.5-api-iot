@@ -619,64 +619,66 @@ p           { color: var(--text-secondary); line-height: 1.6; }
 /* ── Responsive: Tablet y Escritorio ────────────────── */
 @media (min-width: 480px) {
   .app-main { padding: 1.1rem; }
-  #joystick-container { width: 195px; height: 195px; }
-  .joystick-thumb     { width: 68px; height: 68px; }
+  #joystick-container { width: 190px; height: 190px; }
+  .joystick-thumb     { width: 66px; height: 66px; }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 600px) {
   .app-main {
     padding: 1.25rem 1.5rem;
   }
 
-  /* Cuadrícula principal: Izquierda Controles (1.3fr), Derecha Info (1fr) */
+  /* Cuadrícula principal: Izquierda Controles (1.35fr), Derecha Info (1fr) */
   .main-dashboard-grid {
-    display: grid;
-    grid-template-columns: 1.35fr 1fr;
-    gap: 1.25rem;
-    align-items: stretch;
+    display: grid !important;
+    grid-template-columns: 1.35fr 1fr !important;
+    gap: 1.25rem !important;
+    align-items: stretch !important;
   }
 
   /* Sección izquierda: Joystick a la izquierda, Controles + Detener a la derecha */
   .movement-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.1rem;
-    align-items: stretch;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1.1rem !important;
+    align-items: stretch !important;
   }
 
   .joystick-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: stretch;
-    height: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: stretch !important;
+    height: 100% !important;
   }
 
   .joystick-section {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
   }
 
   .movement-actions-column {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    justify-content: space-between;
-    height: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    justify-content: space-between !important;
+    height: 100% !important;
   }
 
   .secondary-card {
     flex: 1;
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   .secondary-buttons {
     flex: 1;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-    align-items: stretch;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.5rem !important;
+    align-items: stretch !important;
   }
 
   .btn-secondary {
@@ -689,11 +691,11 @@ p           { color: var(--text-secondary); line-height: 1.6; }
 
   /* Sección derecha: Conectividad arriba, Última Acción abajo */
   .monitoring-section {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    justify-content: space-between;
-    height: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    justify-content: space-between !important;
+    height: 100% !important;
   }
 
   .conn-card {
@@ -713,11 +715,11 @@ p           { color: var(--text-secondary); line-height: 1.6; }
   }
 
   .main-dashboard-grid {
-    gap: 1.5rem;
+    gap: 1.5rem !important;
   }
 
-  #joystick-container { width: 200px; height: 200px; }
-  .joystick-thumb     { width: 70px; height: 70px; }
+  #joystick-container { width: 195px; height: 195px; }
+  .joystick-thumb     { width: 68px; height: 68px; }
 }
 
 /* ── Landscape móvil ────────────────────────────────── */
