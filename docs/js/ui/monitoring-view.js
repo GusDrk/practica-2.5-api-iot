@@ -6,10 +6,12 @@
 
 import { monitoringService } from '../domain/monitoring.js';
 import { formatDateTime } from '../utils/date-formatter.js';
+import { formatCommandName, getCommandIcon } from '../utils/command-formatter.js';
 
 export class MonitoringView {
   // Elementos de la tarjeta destacada
   #cmdNameEl;
+  #cmdIconEl;
   #cmdCodeEl;
   #cmdOriginEl;
   #cmdDateEl;
@@ -29,6 +31,7 @@ export class MonitoringView {
   #initElements() {
     // Tarjeta último movimiento
     this.#cmdNameEl   = document.getElementById('mon-last-cmd-name');
+    this.#cmdIconEl   = document.getElementById('mon-last-cmd-icon');
     this.#cmdCodeEl   = document.getElementById('mon-last-cmd-code');
     this.#cmdOriginEl = document.getElementById('mon-last-cmd-origin');
     this.#cmdDateEl   = document.getElementById('mon-last-cmd-date');
@@ -82,9 +85,13 @@ export class MonitoringView {
     }
 
     const { fecha, hora } = formatDateTime(estado.fecha_actualizacion || estado.fecha_hora);
+    const cmdCode = estado.codigo ?? estado.id_comando;
+    const cmdFriendly = formatCommandName(estado.comando, cmdCode);
+    const cmdIcon = getCommandIcon(estado.comando, cmdCode);
 
-    if (this.#cmdNameEl)   this.#cmdNameEl.textContent   = estado.comando || 'APAGAR_TODO';
-    if (this.#cmdCodeEl)   this.#cmdCodeEl.textContent   = `Código ${estado.codigo ?? estado.id_comando ?? '--'}`;
+    if (this.#cmdNameEl)   this.#cmdNameEl.textContent   = cmdFriendly;
+    if (this.#cmdIconEl)   this.#cmdIconEl.textContent   = cmdIcon;
+    if (this.#cmdCodeEl)   this.#cmdCodeEl.textContent   = `Código ${cmdCode ?? '--'}`;
     if (this.#cmdOriginEl) this.#cmdOriginEl.textContent = `Origen: ${estado.origen || 'MANUAL'}`;
     if (this.#cmdDateEl)   this.#cmdDateEl.textContent   = fecha;
     if (this.#cmdTimeEl)   this.#cmdTimeEl.textContent   = hora;
@@ -156,7 +163,7 @@ export class MonitoringView {
 
       const movBadge = document.createElement('span');
       movBadge.className = `mov-badge mov-${(item.comando || '').toLowerCase().replace(/_/g, '-')}`;
-      movBadge.textContent = item.comando || 'DESCONOCIDO';
+      movBadge.textContent = formatCommandName(item.comando, item.codigo);
 
       const codeSmall = document.createElement('span');
       codeSmall.className = 'mov-code';

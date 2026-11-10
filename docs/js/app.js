@@ -14,6 +14,7 @@ import { DemoPanel }        from './ui/demo-panel.js';
 import { Navigation }       from './ui/navigation.js';
 import { MonitoringView }   from './ui/monitoring-view.js';
 import { messageService }   from './ui/messages.js';
+import { formatCommandName } from './utils/command-formatter.js';
 import { COMMANDS, ENDPOINTS, CONFIG } from './config.js?v=2.5';
 import { http } from './api/http-client.js';
 import { WS_STATUS } from './ws/ws-client.js';
@@ -132,7 +133,8 @@ function init() {
     const timeEl   = document.getElementById('last-action-time');
     const now = new Date().toLocaleTimeString('es-MX', { hour12: false });
     if (actionEl && data.tipo === 'movimiento') {
-      actionEl.textContent = `📡 WS: ${data.comando} · código ${data.codigo} · ${data.origen}`;
+      const friendlyName = formatCommandName(data.comando, data.codigo);
+      actionEl.textContent = `📡 WS: ${friendlyName} · código ${data.codigo} · ${data.origen}`;
       actionEl.className = 'action-text accepted';
       if (timeEl) timeEl.textContent = now;
     }
