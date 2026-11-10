@@ -11,7 +11,7 @@ import { SecondaryButtons } from './ui/buttons.js';
 import { ConnectivityPanel } from './ui/connectivity.js';
 import { DemoPanel }        from './ui/demo-panel.js';
 import { messageService }   from './ui/messages.js';
-import { COMMANDS, ENDPOINTS, CONFIG } from './config.js';
+import { COMMANDS, ENDPOINTS, CONFIG } from './config.js?v=2.5';
 import { http } from './api/http-client.js';
 import { WS_STATUS } from './ws/ws-client.js';
 

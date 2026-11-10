@@ -4,7 +4,7 @@
  * Despacha eventos DOM para que otros módulos reaccionen.
  */
 
-import { CONFIG } from '../config.js';
+import { CONFIG } from '../config.js?v=2.5';
 
 /** Estados posibles del WebSocket */
 export const WS_STATUS = {
@@ -31,13 +31,16 @@ class WebSocketClient extends EventTarget {
     this.#setStatus(WS_STATUS.CONNECTING);
 
     try {
+      console.log('[WS] Conectando a:', CONFIG.WS_URL);
       this.#socket = new WebSocket(CONFIG.WS_URL);
     } catch (e) {
+      console.error('[WS] Error al instanciar socket:', e);
       this.#scheduleReconnect();
       return;
     }
 
     this.#socket.onopen = () => {
+      console.log('[WS] Conectado exitosamente a:', CONFIG.WS_URL);
       this.#retryCount = 0;
       this.#setStatus(WS_STATUS.ONLINE);
     };
@@ -54,11 +57,12 @@ class WebSocketClient extends EventTarget {
       }
     };
 
-    this.#socket.onerror = () => {
-      // onerror siempre va seguido de onclose
+    this.#socket.onerror = (e) => {
+      console.error('[WS] Error en socket:', e);
     };
 
-    this.#socket.onclose = () => {
+    this.#socket.onclose = (e) => {
+      console.warn('[WS] Socket cerrado (código/razón):', e.code, e.reason);
       this.#socket = null;
       if (!this.#intentionallyClosed) {
         this.#setStatus(WS_STATUS.DISCONNECTED);
