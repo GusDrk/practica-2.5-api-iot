@@ -4,11 +4,11 @@
  */
 
 export const CONFIG = {
-  /** URL base de la API REST (sin barra final) */
-  API_BASE_URL: 'http://100.56.60.192:8000',
+  /** URL base de la API REST (sin barra final) con HTTPS */
+  API_BASE_URL: 'https://carroiotgrua.duckdns.org',
 
-  /** URL del servidor WebSocket */
-  WS_URL: 'ws://100.56.60.192:8000/ws',
+  /** URL del servidor WebSocket con WSS */
+  WS_URL: 'wss://carroiotgrua.duckdns.org/ws',
 
   /** Identificador del vehículo en la base de datos */
   VEHICLE_ID: 1,
