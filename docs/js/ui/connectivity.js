@@ -1,8 +1,8 @@
 /**
- * connectivity.js — Panel de conectividad (3 indicadores)
- * - WebSocket WSS: En línea / Conectando-Reconectando / Desconectado
+ * connectivity.js — Panel de conectividad (3 indicadores reales)
+ * - WebSocket WSS: En línea / Reconectando / Desconectado
  * - API AWS: Disponible / Comprobando / No disponible
- * - Amazon RDS: Sin verificar (no existe endpoint de salud)
+ * - Amazon RDS: Conectado (verificado contra sp_obtener_vehiculo en MySQL) / Comprobando / No disponible
  */
 
 import { wsClient, WS_STATUS } from '../ws/ws-client.js';
@@ -27,15 +27,14 @@ export class ConnectivityPanel {
     this.#apiEl = document.getElementById('conn-api');
     this.#rdsEl = document.getElementById('conn-rds');
 
-    // RDS: sin endpoint de salud → siempre "Sin verificar"
-    this.#renderRds('Sin verificar', 'status-unknown');
     this.#renderWs(wsClient.status);
+    this.#renderRds('Comprobando…', 'status-connecting');
 
     wsClient.addEventListener('ws:status', (e) => {
       this.#renderWs(e.detail.status);
     });
 
-    this.#startApiPolling();
+    this.#startPolling();
   }
 
   #renderWs(status) {
@@ -48,16 +47,19 @@ export class ConnectivityPanel {
 
   #render(el, text, cls) {
     if (!el) return;
-    el.querySelector('.conn-label').textContent = text;
-    el.querySelector('.conn-dot').className = `conn-dot ${cls}`;
+    const label = el.querySelector('.conn-label');
+    const dot   = el.querySelector('.conn-dot');
+    if (label) label.textContent = text;
+    if (dot)   dot.className = `conn-dot ${cls}`;
   }
 
-  #startApiPolling() {
+  #startPolling() {
     this.#checkApi();
-    this.#healthTimer = setInterval(
-      () => this.#checkApi(),
-      CONFIG.HEALTH_CHECK_INTERVAL_MS
-    );
+    this.#checkRds();
+    this.#healthTimer = setInterval(() => {
+      this.#checkApi();
+      this.#checkRds();
+    }, CONFIG.HEALTH_CHECK_INTERVAL_MS);
   }
 
   async #checkApi() {
@@ -75,7 +77,27 @@ export class ConnectivityPanel {
     }
   }
 
+  /**
+   * Verifica la conexión real con Amazon RDS MySQL
+   * consultando el vehículo #1 (ejecuta sp_obtener_vehiculo en RDS).
+   */
+  async #checkRds() {
+    this.#renderRds('Comprobando…', 'status-connecting');
+    try {
+      const data = await http.get(ENDPOINTS.vehiculo(CONFIG.VEHICLE_ID));
+      if (data && data.id_vehiculo) {
+        this.#renderRds('Conectado', 'status-online');
+      } else {
+        this.#renderRds('No disponible', 'status-offline');
+      }
+    } catch {
+      this.#renderRds('No disponible', 'status-offline');
+    }
+  }
+
   destroy() {
-    clearInterval(this.#healthTimer);
+    if (this.#healthTimer) {
+      clearInterval(this.#healthTimer);
+    }
   }
 }
