@@ -6,10 +6,13 @@
 import { wsClient }         from './ws/ws-client.js';
 import { commandService, CMD_STATE } from './domain/commands.js';
 import { demoService }      from './domain/demo.js';
+import { monitoringService } from './domain/monitoring.js';
 import { Joystick }         from './ui/joystick.js';
 import { SecondaryButtons } from './ui/buttons.js';
 import { ConnectivityPanel } from './ui/connectivity.js';
 import { DemoPanel }        from './ui/demo-panel.js';
+import { Navigation }       from './ui/navigation.js';
+import { MonitoringView }   from './ui/monitoring-view.js';
 import { messageService }   from './ui/messages.js';
 import { COMMANDS, ENDPOINTS, CONFIG } from './config.js?v=2.5';
 import { http } from './api/http-client.js';
@@ -20,22 +23,31 @@ function init() {
   // 1. Conectar WebSocket
   wsClient.connect();
 
-  // 2. Panel de conectividad
+  // 2. Navegación superior (Control / Monitoreo)
+  const navigation = new Navigation();
+
+  // 3. Vista de Monitoreo
+  const monitoringView = new MonitoringView();
+
+  // 4. Panel de conectividad
   new ConnectivityPanel();
 
-  // 3. Cargar nombre real del vehículo desde la API
+  // 5. Cargar nombre real del vehículo desde la API
   loadVehicleName();
 
-  // 4. Joystick
+  // 6. Joystick
   new Joystick('#joystick-container');
 
-  // 4. Botones secundarios (Garra, Bocina)
+  // 7. Botones secundarios (Garra, Bocina)
   new SecondaryButtons();
 
-  // 5. Panel de DEMOs
+  // 8. Panel de DEMOs
   new DemoPanel();
 
-  // 6. Botón DETENER
+  // 9. Cargar datos iniciales de monitoreo en segundo plano
+  monitoringService.loadInitialData().catch(() => {});
+
+  // 10. Botón DETENER
   const btnStop = document.getElementById('btn-stop');
   if (btnStop) {
     btnStop.addEventListener('click', () => {
@@ -109,10 +121,11 @@ function init() {
     }
   });
 
-  // 10. Rutear eventos WebSocket a demoService
+  // 10. Rutear eventos WebSocket a demoService y monitoringService
   wsClient.addEventListener('ws:message', (e) => {
     const data = e.detail;
     demoService.handleWsEvent(data);
+    monitoringService.handleWsEvent(data);
 
     // Log de evento en el panel de acción
     const actionEl = document.getElementById('last-action');
@@ -125,12 +138,13 @@ function init() {
     }
   });
 
-  // 11. Feedback de conexión WebSocket + badge del header
+  // 11. Feedback de conexión WebSocket + badge del header + reconexión monitoreo
   wsClient.addEventListener('ws:status', (e) => {
     const { status } = e.detail;
     updateHeaderWsBadge(status);
     if (status === 'online') {
       messageService.success('WebSocket conectado');
+      monitoringService.handleWsReconnect();
     } else if (status === 'disconnected') {
       messageService.warning('WebSocket desconectado — reconectando…');
     }

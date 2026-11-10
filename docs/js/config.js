@@ -56,6 +56,9 @@ export const STOP_COMMAND = COMMANDS.APAGAR_TODO;
 /** Endpoints reales de la API */
 export const ENDPOINTS = {
   status:         () => `${CONFIG.API_BASE_URL}/status`,
+  vehiculo:       (vid) => `${CONFIG.API_BASE_URL}/vehiculos/${vid}`,
+  estado:         (vid) => `${CONFIG.API_BASE_URL}/vehiculos/${vid}/estado`,
+  historial:      (vid) => `${CONFIG.API_BASE_URL}/vehiculos/${vid}/historial`,
   comandos:       (vid) => `${CONFIG.API_BASE_URL}/vehiculos/${vid}/comandos`,
   demos:          (vid) => `${CONFIG.API_BASE_URL}/vehiculos/${vid}/demos`,
   movimiento:     () => `${CONFIG.API_BASE_URL}/movimientos`,

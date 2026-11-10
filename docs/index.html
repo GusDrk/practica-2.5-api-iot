@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="Panel de control IoT para vehículo robótico. Envío de comandos en tiempo real vía REST y WebSocket." />
+  <meta name="description" content="Panel de control y monitoreo IoT para vehículo robótico. Telemetría y comandos en tiempo real vía REST y WebSocket." />
   <meta name="theme-color" content="#0a0d14" />
 
-  <title>IoT Vehicle Control · Práctica 2.5</title>
+  <title>IoT Vehicle Control & Monitoreo · Práctica 2.5</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
@@ -20,8 +20,8 @@
   <!-- Bootstrap 5 Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
-  <!-- Estilos propios (con versión para forzar actualización de caché) -->
-  <link rel="stylesheet" href="./css/style.css?v=2.5" />
+  <!-- Estilos propios -->
+  <link rel="stylesheet" href="./css/style.css?v=4.0" />
 </head>
 <body>
 
@@ -38,6 +38,33 @@
         </div>
       </div>
     </div>
+
+    <!-- Pestañas de Navegación (Control / Monitoreo) -->
+    <nav class="app-navigation" role="tablist" aria-label="Secciones de la aplicación">
+      <button
+        id="tab-control"
+        class="nav-tab active"
+        role="tab"
+        aria-selected="true"
+        aria-controls="view-control"
+        tabindex="0"
+      >
+        <i class="bi bi-controller" aria-hidden="true"></i>
+        <span>Control</span>
+      </button>
+      <button
+        id="tab-monitoring"
+        class="nav-tab"
+        role="tab"
+        aria-selected="false"
+        aria-controls="view-monitoring"
+        tabindex="-1"
+      >
+        <i class="bi bi-speedometer2" aria-hidden="true"></i>
+        <span>Monitoreo</span>
+      </button>
+    </nav>
+
     <!-- Badge de estado WS en header -->
     <div class="header-status">
       <span class="ws-badge" id="header-ws-badge" aria-label="Estado WebSocket">
@@ -52,194 +79,286 @@
   ═══════════════════════════════════════════ -->
   <main class="app-main" id="main-content" role="main">
 
-    <!-- Bloque Superior: Movimientos a la izquierda, Conectividad e Información a la derecha -->
-    <div class="main-dashboard-grid">
+    <!-- ═════════════════════════════════════════
+         VISTA 1: CONTROL (Módulo de operación)
+    ═════════════════════════════════════════ -->
+    <div id="view-control" class="view-panel active" role="tabpanel" aria-labelledby="tab-control">
 
-      <!-- ── PARTE IZQUIERDA: MOVIMIENTOS Y OPERACIÓN ── -->
-      <section class="movement-section" aria-label="Operación del vehículo">
+      <!-- Bloque Superior: Movimientos a la izquierda, Conectividad e Información a la derecha -->
+      <div class="main-dashboard-grid">
 
-        <!-- 1. Joystick (hasta la izquierda) -->
-        <div class="card joystick-card" aria-label="Control de dirección">
-          <div class="card-title">
-            <i class="bi bi-joystick" aria-hidden="true"></i>
-            Dirección
-          </div>
-          <div class="joystick-section">
-            <div class="joystick-wrapper">
-              <div
-                id="joystick-container"
-                role="application"
-                aria-label="Joystick de dirección. Usa W A S D para mover."
-                tabindex="0"
-              >
-                <!-- Puck / thumb -->
-                <div class="joystick-thumb" aria-hidden="true"></div>
-                <!-- Etiquetas de dirección -->
-                <div class="joystick-hints" aria-hidden="true">
-                  <span class="joystick-hint up">▲ W</span>
-                  <span class="joystick-hint down">▼ S</span>
-                  <span class="joystick-hint left">◀ A</span>
-                  <span class="joystick-hint right">D ▶</span>
+        <!-- ── PARTE IZQUIERDA: MOVIMIENTOS Y OPERACIÓN ── -->
+        <section class="movement-section" aria-label="Operación del vehículo">
+
+          <!-- 1. Joystick (hasta la izquierda) -->
+          <div class="card joystick-card" aria-label="Control de dirección">
+            <div class="card-title">
+              <i class="bi bi-joystick" aria-hidden="true"></i>
+              Dirección
+            </div>
+            <div class="joystick-section">
+              <div class="joystick-wrapper">
+                <div
+                  id="joystick-container"
+                  role="application"
+                  aria-label="Joystick de dirección. Usa W A S D para mover."
+                  tabindex="0"
+                >
+                  <!-- Puck / thumb -->
+                  <div class="joystick-thumb" aria-hidden="true"></div>
+                  <!-- Etiquetas de dirección -->
+                  <div class="joystick-hints" aria-hidden="true">
+                    <span class="joystick-hint up">▲ W</span>
+                    <span class="joystick-hint down">▼ S</span>
+                    <span class="joystick-hint left">◀ A</span>
+                    <span class="joystick-hint right">D ▶</span>
+                  </div>
                 </div>
               </div>
+              <p class="joystick-hint-text">
+                Arrastra o usa <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> · Suelta para detener
+              </p>
             </div>
-            <p class="joystick-hint-text">
-              Arrastra o usa <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> · Suelta para detener
-            </p>
           </div>
-        </div>
 
-        <!-- 2. Columna a la derecha del joystick: Controles arriba + DETENER abajo -->
-        <div class="movement-actions-column">
+          <!-- 2. Columna a la derecha del joystick: Controles arriba + DETENER abajo -->
+          <div class="movement-actions-column">
 
-          <!-- Arriba a la derecha del joystick: Subir/Bajar garra y Bocina -->
-          <div class="card secondary-card" aria-label="Controles adicionales">
+            <!-- Arriba a la derecha del joystick: Subir/Bajar garra y Bocina -->
+            <div class="card secondary-card" aria-label="Controles adicionales">
+              <div class="card-title">
+                <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
+                Controles
+              </div>
+              <div class="secondary-buttons">
+                <button
+                  id="btn-subir-garra"
+                  class="btn-secondary"
+                  aria-label="Subir garra (tecla U)"
+                  title="Subir Garra · Q3 · tecla U"
+                >
+                  <span class="btn-icon" aria-hidden="true">🦾</span>
+                  <span class="btn-label">Subir<br>Garra (U)</span>
+                </button>
+
+                <button
+                  id="btn-bajar-garra"
+                  class="btn-secondary"
+                  aria-label="Bajar garra (tecla J)"
+                  title="Bajar Garra · Q2 · tecla J"
+                >
+                  <span class="btn-icon" aria-hidden="true">⬇️</span>
+                  <span class="btn-label">Bajar<br>Garra (J)</span>
+                </button>
+
+                <button
+                  id="btn-bocina"
+                  class="btn-secondary"
+                  aria-label="Activar bocina (tecla B)"
+                  title="Bocina · Q1 · tecla B"
+                >
+                  <span class="btn-icon" aria-hidden="true">📯</span>
+                  <span class="btn-label">Bocina<br>(B)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Abajo de los controles: Botón DETENER -->
+            <div class="card stop-card" aria-label="Parada de emergencia">
+              <button
+                id="btn-stop"
+                aria-label="Detener vehículo — APAGAR TODO (tecla Q)"
+                title="Envía APAGAR_TODO · código 8 · todas las salidas OFF · tecla Q"
+              >
+                <i class="bi bi-stop-circle-fill" aria-hidden="true" style="font-size:1.3rem;"></i>
+                DETENER (Q)
+              </button>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- ── PARTE DERECHA: CONECTIVIDAD Y ÚLTIMA ACCIÓN ── -->
+        <section class="monitoring-section" aria-label="Monitoreo y conectividad">
+
+          <!-- Conectividad -->
+          <div class="card conn-card" aria-label="Estado de conectividad">
             <div class="card-title">
-              <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i>
-              Controles
+              <i class="bi bi-wifi" aria-hidden="true"></i>
+              Conectividad
             </div>
-            <div class="secondary-buttons">
-              <button
-                id="btn-subir-garra"
-                class="btn-secondary"
-                aria-label="Subir garra (tecla U)"
-                title="Subir Garra · Q3 · tecla U"
-              >
-                <span class="btn-icon" aria-hidden="true">🦾</span>
-                <span class="btn-label">Subir<br>Garra (U)</span>
-              </button>
+            <div class="connectivity-grid">
+              <!-- WebSocket -->
+              <div class="conn-item" id="conn-ws" aria-label="Estado WebSocket">
+                <span class="conn-name">WebSocket</span>
+                <span class="conn-dot status-connecting" role="img" aria-label="Conectando"></span>
+                <span class="conn-label">Conectando…</span>
+              </div>
 
-              <button
-                id="btn-bajar-garra"
-                class="btn-secondary"
-                aria-label="Bajar garra (tecla J)"
-                title="Bajar Garra · Q2 · tecla J"
-              >
-                <span class="btn-icon" aria-hidden="true">⬇️</span>
-                <span class="btn-label">Bajar<br>Garra (J)</span>
-              </button>
+              <!-- API AWS -->
+              <div class="conn-item" id="conn-api" aria-label="Estado API AWS">
+                <span class="conn-name">API AWS</span>
+                <span class="conn-dot status-connecting" role="img" aria-label="Comprobando"></span>
+                <span class="conn-label">Comprobando…</span>
+              </div>
 
-              <button
-                id="btn-bocina"
-                class="btn-secondary"
-                aria-label="Activar bocina (tecla B)"
-                title="Bocina · Q1 · tecla B"
-              >
-                <span class="btn-icon" aria-hidden="true">📯</span>
-                <span class="btn-label">Bocina<br>(B)</span>
-              </button>
+              <!-- Amazon RDS -->
+              <div class="conn-item" id="conn-rds" aria-label="Estado Amazon RDS">
+                <span class="conn-name">Amazon RDS</span>
+                <span class="conn-dot status-unknown" role="img" aria-label="Sin verificar"></span>
+                <span class="conn-label">Sin verificar</span>
+              </div>
             </div>
           </div>
 
-          <!-- Abajo de los controles: Botón DETENER -->
-          <div class="card stop-card" aria-label="Parada de emergencia">
-            <button
-              id="btn-stop"
-              aria-label="Detener vehículo — APAGAR TODO (tecla Q)"
-              title="Envía APAGAR_TODO · código 8 · todas las salidas OFF · tecla Q"
+          <!-- Última Acción -->
+          <div class="card action-card" aria-label="Última acción enviada">
+            <div class="card-title">
+              <i class="bi bi-activity" aria-hidden="true"></i>
+              Última acción
+            </div>
+            <div class="action-bar">
+              <span class="action-text" id="last-action" role="status" aria-live="polite">
+                Sin actividad — mueve el joystick o presiona un botón
+              </span>
+              <span class="action-time" id="last-action-time" aria-label="Hora de última acción"></span>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+      <!-- ── PARTE INFERIOR: SECUENCIAS DEMO ── -->
+      <section class="card demo-card" aria-label="Ejecución de secuencias DEMO">
+        <div class="card-title">
+          <i class="bi bi-play-circle" aria-hidden="true"></i>
+          Secuencias DEMO
+        </div>
+        <div class="demo-controls">
+          <div class="demo-select-row">
+            <select
+              id="demo-select"
+              aria-label="Seleccionar DEMO"
+              title="Selecciona una secuencia DEMO disponible"
             >
-              <i class="bi bi-stop-circle-fill" aria-hidden="true" style="font-size:1.3rem;"></i>
-              DETENER (Q)
+              <option value="">Cargando DEMOs…</option>
+            </select>
+          </div>
+          <div class="demo-action-row">
+            <button
+              id="btn-demo-start"
+              class="btn-demo"
+              disabled
+              aria-label="Iniciar DEMO seleccionada"
+            >
+              <i class="bi bi-play-fill" aria-hidden="true"></i>
+              Iniciar DEMO
+            </button>
+            <button
+              id="btn-demo-cancel"
+              class="btn-demo"
+              disabled
+              aria-label="Cancelar DEMO (no disponible en esta versión)"
+              title="Cancelación no disponible en el backend actual"
+            >
+              <i class="bi bi-x-circle" aria-hidden="true"></i>
+              Cancelar
             </button>
           </div>
-
-        </div>
-
-      </section>
-
-      <!-- ── PARTE DERECHA: CONECTIVIDAD Y ÚLTIMA ACCIÓN ── -->
-      <section class="monitoring-section" aria-label="Monitoreo y conectividad">
-
-        <!-- Conectividad -->
-        <div class="card conn-card" aria-label="Estado de conectividad">
-          <div class="card-title">
-            <i class="bi bi-wifi" aria-hidden="true"></i>
-            Conectividad
-          </div>
-          <div class="connectivity-grid">
-            <!-- WebSocket -->
-            <div class="conn-item" id="conn-ws" aria-label="Estado WebSocket">
-              <span class="conn-name">WebSocket</span>
-              <span class="conn-dot status-connecting" role="img" aria-label="Conectando"></span>
-              <span class="conn-label">Conectando…</span>
-            </div>
-
-            <!-- API AWS -->
-            <div class="conn-item" id="conn-api" aria-label="Estado API AWS">
-              <span class="conn-name">API AWS</span>
-              <span class="conn-dot status-connecting" role="img" aria-label="Comprobando"></span>
-              <span class="conn-label">Comprobando…</span>
-            </div>
-
-            <!-- Amazon RDS -->
-            <div class="conn-item" id="conn-rds" aria-label="Estado Amazon RDS">
-              <span class="conn-name">Amazon RDS</span>
-              <span class="conn-dot status-unknown" role="img" aria-label="Sin verificar"></span>
-              <span class="conn-label">Sin verificar</span>
-            </div>
+          <div id="demo-status" class="demo-status-text" role="status" aria-live="polite">
+            Cargando DEMOs…
           </div>
         </div>
-
-        <!-- Última Acción -->
-        <div class="card action-card" aria-label="Última acción enviada">
-          <div class="card-title">
-            <i class="bi bi-activity" aria-hidden="true"></i>
-            Última acción
-          </div>
-          <div class="action-bar">
-            <span class="action-text" id="last-action" role="status" aria-live="polite">
-              Sin actividad — mueve el joystick o presiona un botón
-            </span>
-            <span class="action-time" id="last-action-time" aria-label="Hora de última acción"></span>
-          </div>
-        </div>
-
       </section>
 
     </div>
 
-    <!-- ── PARTE INFERIOR: SECUENCIAS DEMO ── -->
-    <section class="card demo-card" aria-label="Ejecución de secuencias DEMO">
-      <div class="card-title">
-        <i class="bi bi-play-circle" aria-hidden="true"></i>
-        Secuencias DEMO
-      </div>
-      <div class="demo-controls">
-        <div class="demo-select-row">
-          <select
-            id="demo-select"
-            aria-label="Seleccionar DEMO"
-            title="Selecciona una secuencia DEMO disponible"
-          >
-            <option value="">Cargando DEMOs…</option>
-          </select>
+    <!-- ═════════════════════════════════════════
+         VISTA 2: MONITOREO (Telemetría e Historial)
+    ═════════════════════════════════════════ -->
+    <div id="view-monitoring" class="view-panel" role="tabpanel" aria-labelledby="tab-monitoring" hidden>
+
+      <!-- 1. Tarjeta Visual Destacada del Último Movimiento / Estado -->
+      <section class="card mon-highlight-card" aria-label="Último movimiento reportado">
+        <div class="mon-card-header">
+          <div class="card-title" style="margin-bottom:0;">
+            <i class="bi bi-broadcast-pin" aria-hidden="true"></i>
+            Último Movimiento Reportado
+          </div>
+          <span id="mon-last-cmd-badge" class="mon-status-badge persisted">
+            💾 Persistido (RDS)
+          </span>
         </div>
-        <div class="demo-action-row">
+
+        <div class="mon-highlight-content">
+          <div class="mon-command-display">
+            <div class="mon-command-icon" aria-hidden="true">🕹️</div>
+            <div class="mon-command-info">
+              <div id="mon-last-cmd-name" class="mon-command-title">Cargando…</div>
+              <div class="mon-command-sub">
+                <span id="mon-last-cmd-code">Código --</span>
+                <span class="divider">·</span>
+                <span id="mon-last-cmd-origin">Origen: --</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mon-timestamp-box">
+            <div class="ts-item">
+              <span class="ts-label"><i class="bi bi-calendar3"></i> Fecha:</span>
+              <span id="mon-last-cmd-date" class="ts-value">--/--/----</span>
+            </div>
+            <div class="ts-item">
+              <span class="ts-label"><i class="bi bi-clock"></i> Hora:</span>
+              <span id="mon-last-cmd-time" class="ts-value">--:--:--</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Tabla de los Últimos 10 Movimientos Persistidos -->
+      <section class="card mon-table-card" aria-label="Historial de movimientos">
+        <div class="mon-table-header">
+          <div class="card-title" style="margin-bottom:0;">
+            <i class="bi bi-clock-history" aria-hidden="true"></i>
+            Últimos 10 Movimientos Persistidos (RDS)
+          </div>
           <button
-            id="btn-demo-start"
-            class="btn-demo"
-            disabled
-            aria-label="Iniciar DEMO seleccionada"
+            id="mon-btn-refresh"
+            class="btn-refresh"
+            title="Recargar historial desde Amazon RDS"
+            aria-label="Actualizar tabla de historial"
           >
-            <i class="bi bi-play-fill" aria-hidden="true"></i>
-            Iniciar DEMO
-          </button>
-          <button
-            id="btn-demo-cancel"
-            class="btn-demo"
-            disabled
-            aria-label="Cancelar DEMO (no disponible en esta versión)"
-            title="Cancelación no disponible en el backend actual"
-          >
-            <i class="bi bi-x-circle" aria-hidden="true"></i>
-            Cancelar
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+            <span>Sincronizar</span>
           </button>
         </div>
-        <div id="demo-status" class="demo-status-text" role="status" aria-live="polite">
-          Cargando DEMOs…
+
+        <!-- Contenedor responsivo para evitar cualquier desbordamiento en móviles -->
+        <div class="table-responsive">
+          <table class="history-table" role="table" aria-label="Tabla de 10 últimos movimientos">
+            <thead>
+              <tr role="row">
+                <th scope="col" class="th-num">#</th>
+                <th scope="col" class="th-mov">Movimiento</th>
+                <th scope="col" class="th-fecha">Fecha</th>
+                <th scope="col" class="th-hora">Hora</th>
+                <th scope="col" class="th-origen">Origen</th>
+              </tr>
+            </thead>
+            <tbody id="mon-history-tbody">
+              <!-- Renderizado dinámicamente con JavaScript -->
+            </tbody>
+          </table>
+          <div id="mon-history-status" class="table-status-message" role="status" aria-live="polite">
+            Cargando movimientos…
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+    </div>
 
   </main>
 
@@ -251,7 +370,7 @@
       Desarrollado por <strong>Victor Gustavo Garcia Perez</strong> · 2026
       <br>
       <span style="font-size:0.68rem; opacity:0.6;">
-        FastAPI · IoT · WebSocket · Amazon RDS · AWS
+        FastAPI · IoT · WebSocket · Amazon RDS · AWS · GitHub Pages
       </span>
     </div>
   </footer>
@@ -260,7 +379,7 @@
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
   <!-- Módulo JS principal (ES6 modules) -->
-  <script type="module" src="./js/app.js?v=2.5"></script>
+  <script type="module" src="./js/app.js?v=4.0"></script>
 
 </body>
 </html>
