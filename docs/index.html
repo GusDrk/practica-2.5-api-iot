@@ -466,7 +466,7 @@
           <!-- Formulario rápido de creación de usuario -->
           <form id="form-crear-usuario" class="row g-2 mb-3">
             <div class="col-md-5">
-              <input type="email" class="form-control-custom" id="nuevo-usuario-email" placeholder="correo@ejemplo.com" required>
+              <input type="text" class="form-control-custom" id="nuevo-usuario-email" placeholder="nombre de usuario" required>
             </div>
             <div class="col-md-4">
               <input type="password" class="form-control-custom" id="nuevo-usuario-password" placeholder="Contraseña (mín 6)" required minlength="6">
@@ -490,7 +490,7 @@
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Correo</th>
+                  <th>Usuario</th>
                   <th>Rol</th>
                   <th>Estado</th>
                   <th>Fecha Alta</th>
@@ -558,8 +558,8 @@
 
       <form id="admin-login-form">
         <div class="form-group-custom">
-          <label for="login-email">Correo Electrónico</label>
-          <input type="email" id="login-email" class="form-control-custom" placeholder="ejemplo@iot.com" required autocomplete="username">
+          <label for="login-email">Usuario</label>
+          <input type="text" id="login-email" class="form-control-custom" placeholder="admin / usuario / invitado" required autocomplete="username">
         </div>
         <div class="form-group-custom">
           <label for="login-password">Contraseña</label>
@@ -591,7 +591,7 @@
   </div>
 
   <!-- Módulo JS principal (ES6 modules) -->
-  <script type="module" src="./js/app.js?v=4.3"></script>
+  <script type="module" src="./js/app.js?v=4.4"></script>
 
 </body>
 </html>
