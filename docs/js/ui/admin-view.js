@@ -4,7 +4,7 @@
  */
 
 import { showToast } from '../utils/toast.js';
-import { ENDPOINTS } from '../config.js?v=2.5';
+import { CONFIG } from '../config.js?v=2.5';
 
 export class AdminView {
   #currentUser = null;
@@ -114,7 +114,7 @@ export class AdminView {
     if (submitBtn) submitBtn.disabled = true;
 
     try {
-      const resp = await fetch(`${ENDPOINTS.HTTP_BASE}/admin/login`, {
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -171,7 +171,7 @@ export class AdminView {
     if (!tableBody) return;
 
     try {
-      const resp = await fetch(`${ENDPOINTS.HTTP_BASE}/admin/usuarios`);
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/usuarios`);
       if (!resp.ok) throw new Error('No se pudo cargar la lista de usuarios');
       const usuarios = await resp.json();
 
@@ -203,7 +203,7 @@ export class AdminView {
     if (!email || !pass || !rolId) return;
 
     try {
-      const resp = await fetch(`${ENDPOINTS.HTTP_BASE}/admin/usuarios`, {
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/usuarios`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pass, rol_id: rolId })
@@ -225,7 +225,7 @@ export class AdminView {
   async #handleToggleSupport(habilitado) {
     const statusLabel = document.getElementById('soporte-status-label');
     try {
-      const resp = await fetch(`${ENDPOINTS.HTTP_BASE}/admin/soporte/toggle`, {
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/soporte/toggle`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -258,7 +258,7 @@ export class AdminView {
     const progressBar = document.getElementById('guest-timer-progress');
 
     try {
-      const resp = await fetch(`${ENDPOINTS.HTTP_BASE}/admin/invitado/sesion`, {
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/invitado/sesion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vehiculo_id: 1, duracion_segundos: 300 })
@@ -314,7 +314,7 @@ export class AdminView {
     if (!tableBody) return;
 
     try {
-      const resp = await fetch(`${ENDPOINTS.HTTP_BASE}/admin/auditoria`);
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/auditoria`);
       if (!resp.ok) return;
       const registros = await resp.json();
 
