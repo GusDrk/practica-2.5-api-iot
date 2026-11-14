@@ -7,6 +7,7 @@ from app.services.vehicle_service import VehicleService
 from app.services.demo_service import DemoService
 from app.websocket.websocket_manager import WebSocketManager
 from app.routers.api import build_router
+from app.routers.admin import build_admin_router
 from app.models.estado import Estado
 from app.services.status_service import StatusService
 
@@ -23,7 +24,10 @@ ws_manager = WebSocketManager()
 db = Database()
 vehicles = VehicleService(db)
 demos = DemoService(vehicles, ws_manager)
+
+# Routers principales
 app.include_router(build_router(db, vehicles, demos, ws_manager))
+app.include_router(build_admin_router(db))
 
 status_service = StatusService()
 

@@ -100,3 +100,24 @@ class Database:
 
         finally:
             cursor.close()
+
+    def fetch_all(self, sql: str, *params):
+        """Ejecuta una consulta SELECT y devuelve una lista de diccionarios."""
+        with self.connection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            try:
+                cursor.execute(sql, params)
+                return cursor.fetchall() if cursor.with_rows else []
+            finally:
+                cursor.close()
+
+    def execute(self, sql: str, *params):
+        """Ejecuta una sentencia INSERT/UPDATE/DELETE y devuelve rowcount y lastrowid."""
+        with self.connection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            try:
+                cursor.execute(sql, params)
+                return {"rowcount": cursor.rowcount, "lastrowid": cursor.lastrowid}
+            finally:
+                cursor.close()
+

@@ -13,6 +13,7 @@ import { ConnectivityPanel } from './ui/connectivity.js';
 import { DemoPanel }        from './ui/demo-panel.js';
 import { Navigation }       from './ui/navigation.js';
 import { MonitoringView }   from './ui/monitoring-view.js';
+import { AdminView }        from './ui/admin-view.js';
 import { messageService }   from './ui/messages.js';
 import { formatCommandName } from './utils/command-formatter.js';
 import { COMMANDS, ENDPOINTS, CONFIG } from './config.js?v=2.5';
@@ -29,6 +30,9 @@ function init() {
 
   // 3. Vista de Monitoreo
   const monitoringView = new MonitoringView();
+
+  // 3.1 Vista de Administración
+  const adminView = new AdminView();
 
   // 4. Panel de conectividad
   new ConnectivityPanel();

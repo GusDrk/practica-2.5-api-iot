@@ -1,22 +1,27 @@
 /**
- * navigation.js — Navegación entre vistas CONTROL y MONITOREO
+ * navigation.js — Navegación entre vistas CONTROL, MONITOREO y ADMINISTRACIÓN
  * Alterna entre paneles sin recargar la página para mantener viva la sesión WebSocket.
  */
 
 import { monitoringService } from '../domain/monitoring.js';
 
 export class Navigation {
-  #tabControl;
-  #tabMonitoring;
-  #viewControl;
-  #viewMonitoring;
+  #tabs = {};
+  #views = {};
   #currentView = 'control';
 
   constructor() {
-    this.#tabControl      = document.getElementById('tab-control');
-    this.#tabMonitoring   = document.getElementById('tab-monitoring');
-    this.#viewControl     = document.getElementById('view-control');
-    this.#viewMonitoring  = document.getElementById('view-monitoring');
+    this.#tabs = {
+      control: document.getElementById('tab-control'),
+      monitoring: document.getElementById('tab-monitoring'),
+      admin: document.getElementById('tab-admin')
+    };
+
+    this.#views = {
+      control: document.getElementById('view-control'),
+      monitoring: document.getElementById('view-monitoring'),
+      admin: document.getElementById('view-admin')
+    };
 
     this.#initEvents();
   }
@@ -24,60 +29,64 @@ export class Navigation {
   get currentView() { return this.#currentView; }
 
   #initEvents() {
-    if (this.#tabControl) {
-      this.#tabControl.addEventListener('click', () => this.switchView('control'));
-    }
-    if (this.#tabMonitoring) {
-      this.#tabMonitoring.addEventListener('click', () => this.switchView('monitoring'));
-    }
+    Object.keys(this.#tabs).forEach(viewName => {
+      const tab = this.#tabs[viewName];
+      if (tab) {
+        tab.addEventListener('click', () => this.switchView(viewName));
+      }
+    });
 
     // Navegación por teclado (flechas izquierda/derecha)
     window.addEventListener('keydown', (e) => {
-      if (document.activeElement === this.#tabControl && (e.key === 'ArrowRight' || e.key === 'ArrowDown')) {
-        this.switchView('monitoring');
-        this.#tabMonitoring?.focus();
-      } else if (document.activeElement === this.#tabMonitoring && (e.key === 'ArrowLeft' || e.key === 'ArrowUp')) {
-        this.switchView('control');
-        this.#tabControl?.focus();
+      const keys = ['control', 'monitoring', 'admin'];
+      const activeIdx = keys.findIndex(k => document.activeElement === this.#tabs[k]);
+      if (activeIdx !== -1) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          const nextIdx = (activeIdx + 1) % keys.length;
+          this.switchView(keys[nextIdx]);
+          this.#tabs[keys[nextIdx]]?.focus();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          const prevIdx = (activeIdx - 1 + keys.length) % keys.length;
+          this.switchView(keys[prevIdx]);
+          this.#tabs[keys[prevIdx]]?.focus();
+        }
       }
     });
   }
 
   /**
    * Cambia de vista de manera accesible y reactiva.
-   * @param {'control'|'monitoring'} viewName 
+   * @param {'control'|'monitoring'|'admin'} viewName 
    */
   switchView(viewName) {
     if (viewName === this.#currentView) return;
     this.#currentView = viewName;
 
-    const isControl = viewName === 'control';
+    Object.keys(this.#tabs).forEach(name => {
+      const isTarget = name === viewName;
+      const tab = this.#tabs[name];
+      const view = this.#views[name];
 
-    // 1. Actualizar estado de las pestañas
-    if (this.#tabControl) {
-      this.#tabControl.classList.toggle('active', isControl);
-      this.#tabControl.setAttribute('aria-selected', String(isControl));
-      this.#tabControl.tabIndex = isControl ? 0 : -1;
-    }
-    if (this.#tabMonitoring) {
-      this.#tabMonitoring.classList.toggle('active', !isControl);
-      this.#tabMonitoring.setAttribute('aria-selected', String(!isControl));
-      this.#tabMonitoring.tabIndex = !isControl ? 0 : -1;
-    }
+      if (tab) {
+        tab.classList.toggle('active', isTarget);
+        tab.setAttribute('aria-selected', String(isTarget));
+        tab.tabIndex = isTarget ? 0 : -1;
+      }
 
-    // 2. Alternar visibilidad de los paneles
-    if (this.#viewControl) {
-      this.#viewControl.hidden = !isControl;
-      this.#viewControl.classList.toggle('active', isControl);
-    }
-    if (this.#viewMonitoring) {
-      this.#viewMonitoring.hidden = isControl;
-      this.#viewMonitoring.classList.toggle('active', !isControl);
-    }
+      if (view) {
+        view.hidden = !isTarget;
+        view.classList.toggle('active', isTarget);
+      }
+    });
 
-    // 3. Si entra a Monitoreo, cargar datos frescos de REST
-    if (!isControl) {
+    // Si entra a Monitoreo, cargar datos frescos de REST
+    if (viewName === 'monitoring') {
       monitoringService.loadInitialData().catch(() => {});
+    }
+
+    // Disparar evento para que el módulo de administración cargue datos si es necesario
+    if (viewName === 'admin') {
+      window.dispatchEvent(new CustomEvent('view:admin:active'));
     }
   }
 }
