@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 class UsuarioCrear(BaseModel):
-    email: str = Field(..., description="Correo del usuario")
+    email: str = Field(..., description="Nombre de usuario o correo")
     password: str = Field(..., min_length=6, description="Contraseña en texto plano")
     rol_id: int = Field(default=2, description="1: ADMIN, 2: USUARIO, 3: INVITADO")
 
@@ -13,7 +13,7 @@ class UsuarioActualizar(BaseModel):
     activo: Optional[bool] = None
 
 class LoginRequest(BaseModel):
-    email: str = Field(..., description="Correo del usuario")
+    email: str = Field(..., description="Nombre de usuario o correo")
     password: str
 
 class SoporteToggleRequest(BaseModel):
@@ -22,5 +22,31 @@ class SoporteToggleRequest(BaseModel):
     motivo: Optional[str] = "Intervención de soporte administrativo autorizada"
 
 class InvitadoReservaRequest(BaseModel):
-    vehiculo_id: int
-    duracion_segundos: int = Field(default=300, description="Duración en segundos (5 minutos = 300s)")
+    vehiculo_id: int = Field(default=1, description="ID del vehículo a compartir")
+    duracion_segundos: int = Field(default=15, description="Duración en segundos (15s)")
+
+class ModeloCrear(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+
+class ModeloActualizar(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+
+class UnidadCrear(BaseModel):
+    id_vehiculo: Optional[int] = None
+    nombre: str
+    modelo: Optional[str] = None
+    descripcion: Optional[str] = None
+    microcontrolador: Optional[str] = "ESP8266"
+    usuario_id: Optional[int] = None
+
+class AsignarVehiculoRequest(BaseModel):
+    usuario_id: Optional[int] = None
+
+class DemoUsuarioCrear(BaseModel):
+    id_vehiculo: int
+    nombre: str
+    descripcion: Optional[str] = None
+    usuario_id: Optional[int] = None
+    es_fabrica: bool = False

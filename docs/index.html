@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
   <!-- Estilos propios -->
-  <link rel="stylesheet" href="./css/style.css?v=4.2" />
+  <link rel="stylesheet" href="./css/style.css?v=4.5" />
 </head>
 <body>
 
@@ -372,157 +372,563 @@
     </div>
 
     <!-- ═════════════════════════════════════════
-         VISTA 3: ADMINISTRACIÓN (RBAC & Soporte)
+         VISTA 3: ADMINISTRACIÓN (RBAC & Roles)
     ═════════════════════════════════════════ -->
     <div id="view-admin" class="view-panel" role="tabpanel" aria-labelledby="tab-admin" hidden>
       
-      <!-- Barra superior de autenticación / usuario -->
-      <section class="card mb-3" aria-label="Estado de autenticación">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-2">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-shield-check text-primary fs-4"></i>
-            <div>
-              <div class="fw-bold" id="admin-user-status">Cargando sesión…</div>
-              <small class="text-muted">Control de acceso basado en roles (RBAC) y sesión temporal</small>
-            </div>
-          </div>
-          <div class="d-flex gap-2">
-            <button id="btn-open-login-modal" class="btn-primary-custom" type="button">
-              <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
-            </button>
-            <button id="btn-admin-logout" class="btn-outline-custom d-none" type="button">
-              <i class="bi bi-box-arrow-right"></i> Salir
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Mensaje cuando no está autenticado -->
-      <div id="admin-login-prompt" class="card text-center p-4">
-        <i class="bi bi-lock-fill text-warning" style="font-size: 2.5rem;"></i>
-        <h3 class="mt-2">Acceso a Administración Restringido</h3>
-        <p class="text-muted">Inicia sesión con credenciales de Administrador, Usuario o Invitado para gestionar permisos, autorizar soporte y probar unidades.</p>
-        <div class="mt-3">
-          <button class="btn-primary-custom" onclick="document.getElementById('loginModal').removeAttribute('hidden')">
-            <i class="bi bi-key-fill"></i> Ingresar Credenciales
-          </button>
-        </div>
-      </div>
-
-      <!-- Contenido de administración (visible al iniciar sesión) -->
-      <div id="admin-panel-content" class="d-none">
-        
-        <div class="admin-grid">
-          <!-- 1. INTERRUPTOR DE AUTORIZACIÓN DE SOPORTE -->
-          <div class="card">
-            <div class="card-title">
-              <i class="bi bi-toggles2 text-primary" aria-hidden="true"></i>
-              Autorización de Soporte Técnico
-            </div>
-            <p class="small text-muted mb-3">
-              El administrador no puede intervenir el vehículo de un cliente sin autorización explícita. Activa este interruptor para autorizar soporte.
-            </p>
-            <div class="admin-toggle-wrapper">
-              <label class="switch" aria-label="Interruptor de soporte">
-                <input type="checkbox" id="switch-soporte-admin">
-                <span class="slider"></span>
-              </label>
-              <div>
-                <span class="fw-bold" id="soporte-status-label">INACTIVO</span>
-                <div class="small text-muted">Cada cambio queda registrado en Amazon RDS</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. SESIÓN DE INVITADO DE 5 MINUTOS -->
-          <div class="card guest-timer-card">
-            <div class="card-title">
-              <i class="bi bi-hourglass-split text-warning" aria-hidden="true"></i>
-              Sesión de Invitado (5 Minutos)
-            </div>
-            <p class="small text-muted mb-2">
-              Permite a clientes potenciales operar una unidad de exhibición con tiempo límite estricto de 300 segundos.
-            </p>
-            <button id="btn-iniciar-invitado" class="btn-primary-custom w-100" type="button">
-              <i class="bi bi-play-circle-fill"></i> Iniciar Sesión de Prueba (5 min)
-            </button>
-            <div id="guest-timer-container" class="mt-3 d-none text-center">
-              <div class="small text-muted">Tiempo restante de exhibición:</div>
-              <div id="guest-timer-display" class="guest-countdown">05:00</div>
-              <div class="timer-progress">
-                <div id="guest-timer-progress" class="timer-progress-fill"></div>
-              </div>
-            </div>
-          </div>
+      <!-- 1. FORMULARIO DE INICIO DE SESIÓN (Único elemento visible si NO está autenticado) -->
+      <div id="admin-login-prompt" class="login-centered-card">
+        <div class="text-center mb-4">
+          <div style="font-size: 2.8rem;">🔐</div>
+          <h3 class="mt-2 fw-bold">Acceso al Sistema</h3>
+          <p class="text-muted small">Inicia sesión con tu cuenta para acceder a las funciones correspondientes a tu rol.</p>
         </div>
 
-        <!-- 3. GESTIÓN DE USUARIOS Y ROLES (RBAC) -->
-        <div class="card mt-3">
-          <div class="card-title">
-            <i class="bi bi-people-fill text-info" aria-hidden="true"></i>
-            Usuarios y Roles Registrados
+        <form id="admin-login-form">
+          <div class="form-group-custom">
+            <label for="login-email"><i class="bi bi-person-fill text-primary"></i> Usuario</label>
+            <input type="text" id="login-email" class="form-control-custom" placeholder="admin / usuario / invitado" required autocomplete="username">
           </div>
-          
-          <!-- Formulario rápido de creación de usuario -->
-          <form id="form-crear-usuario" class="row g-2 mb-3">
-            <div class="col-md-5">
-              <input type="text" class="form-control-custom" id="nuevo-usuario-email" placeholder="nombre de usuario" required>
-            </div>
-            <div class="col-md-4">
-              <input type="password" class="form-control-custom" id="nuevo-usuario-password" placeholder="Contraseña (mín 6)" required minlength="6">
-            </div>
-            <div class="col-md-2">
-              <select class="form-control-custom" id="nuevo-usuario-rol" required>
-                <option value="2">USUARIO</option>
-                <option value="1">ADMIN</option>
-                <option value="3">INVITADO</option>
-              </select>
-            </div>
-            <div class="col-md-1">
-              <button class="btn-primary-custom w-100" type="submit" title="Registrar usuario">
-                <i class="bi bi-plus-lg"></i>
+          <div class="form-group-custom">
+            <label for="login-password"><i class="bi bi-key-fill text-primary"></i> Contraseña</label>
+            <input type="password" id="login-password" class="form-control-custom" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <!-- Botones de acceso rápido para pruebas -->
+          <div class="mb-3">
+            <small class="text-muted d-block mb-1">Accesos rápidos:</small>
+            <div class="d-flex flex-wrap gap-1">
+              <button type="button" class="btn-outline-custom" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;" onclick="document.getElementById('login-email').value='admin'; document.getElementById('login-password').value='admin12345';">
+                Admin (admin12345)
+              </button>
+              <button type="button" class="btn-outline-custom" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;" onclick="document.getElementById('login-email').value='usuario'; document.getElementById('login-password').value='usuario12345';">
+                Usuario (usuario12345)
+              </button>
+              <button type="button" class="btn-outline-custom" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;" onclick="document.getElementById('login-email').value='invitado'; document.getElementById('login-password').value='invitado12345';">
+                Invitado (invitado12345)
               </button>
             </div>
-          </form>
-
-          <div class="table-responsive">
-            <table class="history-table" role="table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Usuario</th>
-                  <th>Rol</th>
-                  <th>Estado</th>
-                  <th>Fecha Alta</th>
-                </tr>
-              </thead>
-              <tbody id="tabla-usuarios-body">
-                <tr><td colspan="5" class="text-center text-muted">Cargando usuarios…</td></tr>
-              </tbody>
-            </table>
           </div>
+
+          <button type="submit" class="btn-primary-custom w-100 mt-2">
+            <i class="bi bi-box-arrow-in-right"></i> Entrar al Sistema
+          </button>
+        </form>
+      </div>
+
+      <!-- 2. CONTENIDO PRINCIPAL AUTENTICADO (Visible ÚNICAMENTE tras iniciar sesión) -->
+      <div id="admin-panel-content" class="d-none">
+
+        <!-- Barra superior de autenticación / usuario -->
+        <section class="card mb-3" aria-label="Estado de autenticación">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-2">
+            <div class="d-flex align-items-center gap-3">
+              <div id="admin-role-avatar" style="font-size: 2rem;">👤</div>
+              <div>
+                <div class="fw-bold fs-5" id="admin-user-status">Cargando sesión…</div>
+                <small class="text-muted" id="admin-user-desc">Panel de funciones según privilegios de rol</small>
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <button id="btn-admin-logout" class="btn-outline-custom" type="button">
+                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════════════════════
+             ROL 1: ADMINISTRADOR (EMPRESA)
+        ════════════════════════════════════════════════════════════════ -->
+        <div id="admin-role-suite" class="d-none">
+          
+          <!-- Pestañas secundarias de Administrador -->
+          <div class="role-nav-pills">
+            <button type="button" class="role-pill-btn active" data-target="admin-section-stats">
+              <i class="bi bi-speedometer2"></i> Dashboard
+            </button>
+            <button type="button" class="role-pill-btn" data-target="admin-section-models">
+              <i class="bi bi-diagram-3"></i> Modelos
+            </button>
+            <button type="button" class="role-pill-btn" data-target="admin-section-inventory">
+              <i class="bi bi-truck"></i> Unidades Físicas
+            </button>
+            <button type="button" class="role-pill-btn" data-target="admin-section-clients">
+              <i class="bi bi-people"></i> Clientes & Asignación
+            </button>
+            <button type="button" class="role-pill-btn" data-target="admin-section-demos">
+              <i class="bi bi-play-btn"></i> Demos de Fábrica
+            </button>
+            <button type="button" class="role-pill-btn" data-target="admin-section-audit">
+              <i class="bi bi-shield-check"></i> Auditoría & Soporte
+            </button>
+            <button type="button" class="role-pill-btn" data-target="admin-section-qr">
+              <i class="bi bi-qr-code"></i> Acceso Invitado (QR 15s)
+            </button>
+          </div>
+
+          <!-- SECCIÓN 1: DASHBOARD DE ESTADÍSTICAS -->
+          <div id="admin-section-stats" class="admin-sub-section">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon bg-primary text-white"><i class="bi bi-truck"></i></div>
+                <div>
+                  <div class="stat-value" id="stat-total-vehiculos">0</div>
+                  <div class="stat-label">Total Vehículos</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon bg-success text-white"><i class="bi bi-check-circle"></i></div>
+                <div>
+                  <div class="stat-value" id="stat-vehiculos-activos">0</div>
+                  <div class="stat-label">Unidades Activas</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon bg-info text-white"><i class="bi bi-person-lines-fill"></i></div>
+                <div>
+                  <div class="stat-value" id="stat-total-clientes">0</div>
+                  <div class="stat-label">Clientes Registrados</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon bg-warning text-white"><i class="bi bi-diagram-2"></i></div>
+                <div>
+                  <div class="stat-value" id="stat-total-modelos">0</div>
+                  <div class="stat-label">Modelos Comerciales</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon bg-secondary text-white"><i class="bi bi-journal-text"></i></div>
+                <div>
+                  <div class="stat-value" id="stat-total-auditorias">0</div>
+                  <div class="stat-label">Registros Auditoría</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 2: MODELOS DE VEHÍCULOS -->
+          <div id="admin-section-models" class="admin-sub-section d-none">
+            <div class="card mb-3">
+              <div class="card-title"><i class="bi bi-plus-circle text-primary"></i> Registrar / Editar Modelo Comercial</div>
+              <form id="form-crear-modelo" class="row g-2">
+                <div class="col-md-5">
+                  <input type="text" class="form-control-custom" id="modelo-nombre" placeholder="Nombre del modelo (ej. Rover Explorer 4WD)" required>
+                </div>
+                <div class="col-md-5">
+                  <input type="text" class="form-control-custom" id="modelo-descripcion" placeholder="Descripción del modelo">
+                </div>
+                <div class="col-md-2">
+                  <button type="submit" class="btn-primary-custom w-100"><i class="bi bi-save"></i> Guardar</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i class="bi bi-diagram-3 text-info"></i> Catálogo de Modelos Registrados</div>
+              <div class="table-responsive">
+                <table class="history-table">
+                  <thead>
+                    <tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Fecha Alta</th></tr>
+                  </thead>
+                  <tbody id="tabla-modelos-body">
+                    <tr><td colspan="4" class="text-center text-muted">Cargando modelos…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 3: UNIDADES FÍSICAS E INVENTARIO -->
+          <div id="admin-section-inventory" class="admin-sub-section d-none">
+            <div class="card mb-3">
+              <div class="card-title"><i class="bi bi-plus-circle text-success"></i> Registrar Nueva Unidad Física</div>
+              <form id="form-crear-unidad" class="row g-2">
+                <div class="col-md-2">
+                  <input type="number" class="form-control-custom" id="unidad-id" placeholder="ID (opcional)">
+                </div>
+                <div class="col-md-3">
+                  <input type="text" class="form-control-custom" id="unidad-nombre" placeholder="Nombre de la unidad" required>
+                </div>
+                <div class="col-md-3">
+                  <input type="text" class="form-control-custom" id="unidad-modelo" placeholder="Modelo">
+                </div>
+                <div class="col-md-2">
+                  <input type="text" class="form-control-custom" id="unidad-mcu" placeholder="MCU (ESP8266)" value="ESP8266">
+                </div>
+                <div class="col-md-2">
+                  <button type="submit" class="btn-primary-custom w-100"><i class="bi bi-plus-lg"></i> Registrar</button>
+                </div>
+                <div class="col-12 mt-1">
+                  <input type="text" class="form-control-custom" id="unidad-descripcion" placeholder="Descripción técnica de la unidad física">
+                </div>
+              </form>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i class="bi bi-truck text-primary"></i> Inventario de Vehículos Físicos</div>
+              <div class="table-responsive">
+                <table class="history-table">
+                  <thead>
+                    <tr><th>ID</th><th>Nombre</th><th>Modelo</th><th>MCU</th><th>Cliente Asignado</th><th>Estado</th></tr>
+                  </thead>
+                  <tbody id="tabla-inventario-body">
+                    <tr><td colspan="6" class="text-center text-muted">Cargando inventario…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 4: CLIENTES Y ASIGNACIÓN -->
+          <div id="admin-section-clients" class="admin-sub-section d-none">
+            <div class="admin-grid mb-3">
+              <!-- Registrar cliente -->
+              <div class="card">
+                <div class="card-title"><i class="bi bi-person-plus text-info"></i> Registrar Nuevo Cliente</div>
+                <form id="form-crear-cliente">
+                  <div class="form-group-custom">
+                    <label>Usuario / Correo</label>
+                    <input type="text" class="form-control-custom" id="cliente-email" placeholder="usuario_cliente" required>
+                  </div>
+                  <div class="form-group-custom">
+                    <label>Contraseña</label>
+                    <input type="password" class="form-control-custom" id="cliente-password" placeholder="••••••••" required minlength="6">
+                  </div>
+                  <button type="submit" class="btn-primary-custom w-100"><i class="bi bi-person-check"></i> Registrar Cliente</button>
+                </form>
+              </div>
+
+              <!-- Asignar o cambiar vehículo -->
+              <div class="card">
+                <div class="card-title"><i class="bi bi-arrow-left-right text-warning"></i> Asignar / Cambiar Asignación de Vehículo</div>
+                <form id="form-asignar-vehiculo">
+                  <div class="form-group-custom">
+                    <label>Seleccionar Vehículo</label>
+                    <select class="form-control-custom" id="select-asignar-vehiculo" required>
+                      <option value="">Cargando vehículos…</option>
+                    </select>
+                  </div>
+                  <div class="form-group-custom">
+                    <label>Asignar a Cliente</label>
+                    <select class="form-control-custom" id="select-asignar-cliente" required>
+                      <option value="">Cargando clientes…</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn-primary-custom w-100"><i class="bi bi-link-45deg"></i> Guardar Asignación</button>
+                </form>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i class="bi bi-people text-info"></i> Lista de Clientes Registrados</div>
+              <div class="table-responsive">
+                <table class="history-table">
+                  <thead>
+                    <tr><th>ID</th><th>Usuario</th><th>Vehículos Asignados</th><th>Estado</th><th>Fecha Registro</th></tr>
+                  </thead>
+                  <tbody id="tabla-clientes-body">
+                    <tr><td colspan="5" class="text-center text-muted">Cargando clientes…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 5: DEMOS DE FÁBRICA -->
+          <div id="admin-section-demos" class="admin-sub-section d-none">
+            <div class="card mb-3">
+              <div class="card-title"><i class="bi bi-play-circle text-primary"></i> Registrar Demostración de Fábrica</div>
+              <form id="form-crear-demo-fabrica" class="row g-2">
+                <div class="col-md-3">
+                  <select class="form-control-custom" id="demo-fabrica-vehiculo" required>
+                    <option value="1">Vehículo #1</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <input type="text" class="form-control-custom" id="demo-fabrica-nombre" placeholder="Nombre de la Demo" required>
+                </div>
+                <div class="col-md-3">
+                  <input type="text" class="form-control-custom" id="demo-fabrica-desc" placeholder="Descripción">
+                </div>
+                <div class="col-md-2">
+                  <button type="submit" class="btn-primary-custom w-100"><i class="bi bi-plus-lg"></i> Crear Demo</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i class="bi bi-collection-play text-info"></i> Demostraciones de Fábrica Activas</div>
+              <div class="table-responsive">
+                <table class="history-table">
+                  <thead>
+                    <tr><th>ID</th><th>Demo</th><th>Vehículo</th><th>Descripción</th><th>Tipo</th></tr>
+                  </thead>
+                  <tbody id="tabla-demos-fabrica-body">
+                    <tr><td colspan="5" class="text-center text-muted">Cargando demos de fábrica…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 6: AUDITORÍA & SOPORTE -->
+          <div id="admin-section-audit" class="admin-sub-section d-none">
+            <div class="card mb-3">
+              <div class="card-title"><i class="bi bi-toggles2 text-primary"></i> Autorización de Soporte Técnico</div>
+              <p class="small text-muted mb-3">
+                El administrador no puede intervenir el vehículo de un cliente sin autorización explícita. Activa este interruptor para autorizar soporte.
+              </p>
+              <div class="admin-toggle-wrapper">
+                <label class="switch" aria-label="Interruptor de soporte">
+                  <input type="checkbox" id="switch-soporte-admin">
+                  <span class="slider"></span>
+                </label>
+                <div>
+                  <span class="fw-bold" id="soporte-status-label">INACTIVO</span>
+                  <div class="small text-muted">Cada cambio queda registrado en Amazon RDS</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i class="bi bi-journal-text text-secondary"></i> Log de Auditoría Administrativa</div>
+              <div class="table-responsive">
+                <table class="history-table">
+                  <thead>
+                    <tr><th>Hora</th><th>Admin</th><th>Acción</th><th>Detalle</th></tr>
+                  </thead>
+                  <tbody id="tabla-auditoria-body">
+                    <tr><td colspan="4" class="text-center text-muted">Cargando auditoría…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 7: QR INVITADO 15 SEGUNDOS (ADMIN) -->
+          <div id="admin-section-qr" class="admin-sub-section d-none">
+            <div class="card guest-timer-card">
+              <div class="card-title"><i class="bi bi-qr-code-scan text-warning"></i> Conceder Acceso a Invitado con QR (15 Segundos)</div>
+              <p class="small text-muted">
+                Genera un código QR de acceso temporal para que un cliente potencial opere una unidad de exhibición durante 15 segundos exactos.
+              </p>
+              <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                  <select class="form-control-custom" id="qr-admin-select-vehiculo">
+                    <option value="1">Vehículo #1 (Excavadora IoT)</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <button id="btn-generar-qr-admin" class="btn-primary-custom w-100" type="button">
+                    <i class="bi bi-qr-code"></i> Generar QR de Acceso (15s)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Contenedor del QR y cuenta regresiva -->
+              <div id="qr-admin-display-container" class="qr-container d-none">
+                <div class="small text-muted mb-1">Escanea el código QR con tu celular para operar la unidad:</div>
+                <div class="qr-image-wrapper">
+                  <img id="qr-admin-img" alt="Código QR Invitado" src="" />
+                </div>
+                <div class="small text-muted">Tiempo restante de sesión:</div>
+                <div id="qr-admin-countdown" class="guest-countdown-15">15s</div>
+                <div class="timer-progress w-75">
+                  <div id="qr-admin-progress" class="timer-progress-fill"></div>
+                </div>
+                <div class="mt-3">
+                  <small class="text-muted d-block mb-1">Enlace directo:</small>
+                  <code id="qr-admin-link" class="user-select-all text-break small"></code>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <!-- 4. REGISTRO DE AUDITORÍA -->
-        <div class="card mt-3">
-          <div class="card-title">
-            <i class="bi bi-journal-text text-secondary" aria-hidden="true"></i>
-            Auditoría de Acciones Administrativas
+        <!-- ════════════════════════════════════════════════════════════════
+             ROL 2: USUARIO (COMPRADOR DE VEHÍCULO)
+        ════════════════════════════════════════════════════════════════ -->
+        <div id="user-role-suite" class="d-none">
+          
+          <!-- Selector de unidad asignada -->
+          <div class="card mb-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+              <div>
+                <span class="text-muted small">Vehículo que deseas operar:</span>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                  <select id="user-assigned-vehicle-select" class="form-control-custom fw-bold" style="max-width: 320px;">
+                    <option value="1">Cargando tus vehículos…</option>
+                  </select>
+                  <span class="badge bg-success" id="user-vehicle-status-badge"><i class="bi bi-circle-fill"></i> Activo</span>
+                </div>
+              </div>
+              <div class="text-end">
+                <span class="small text-muted d-block">Acceso exclusivo a tus unidades</span>
+                <span class="badge bg-primary">Comprador</span>
+              </div>
+            </div>
           </div>
-          <div class="table-responsive">
-            <table class="history-table" role="table">
-              <thead>
-                <tr>
-                  <th>Hora</th>
-                  <th>Admin</th>
-                  <th>Acción</th>
-                  <th>Detalle</th>
-                </tr>
-              </thead>
-              <tbody id="tabla-auditoria-body">
-                <tr><td colspan="4" class="text-center text-muted">Cargando auditoría…</td></tr>
-              </tbody>
-            </table>
+
+          <!-- Pestañas secundarias de Usuario -->
+          <div class="role-nav-pills">
+            <button type="button" class="role-pill-btn active" data-target="user-section-control">
+              <i class="bi bi-controller"></i> Control & Movimiento
+            </button>
+            <button type="button" class="role-pill-btn" data-target="user-section-monitoring">
+              <i class="bi bi-speedometer2"></i> Estado & Historial
+            </button>
+            <button type="button" class="role-pill-btn" data-target="user-section-demos">
+              <i class="bi bi-stars"></i> Mis Demostraciones
+            </button>
+            <button type="button" class="role-pill-btn" data-target="user-section-qr">
+              <i class="bi bi-qr-code"></i> Dar Acceso a Invitado (15s)
+            </button>
+          </div>
+
+          <!-- SECCIÓN USUARIO 1: CONTROL Y MOVIMIENTO -->
+          <div id="user-section-control" class="user-sub-section">
+            <div class="card text-center p-3">
+              <div class="card-title justify-content-center mb-3">
+                <i class="bi bi-joystick text-primary"></i> Operación del Vehículo Asignado
+              </div>
+              <p class="text-muted small mb-3">
+                Puedes controlar tu unidad asignada directamente con el Joystick y los botones de movimiento, o cambiar a la vista general de Control.
+              </p>
+              <div class="d-flex justify-content-center gap-3">
+                <button class="btn-primary-custom" onclick="document.getElementById('tab-control')?.click();">
+                  <i class="bi bi-fullscreen"></i> Abrir Cockpit Completo de Control
+                </button>
+                <button class="btn-danger-custom" id="user-btn-stop-quick" onclick="document.getElementById('btn-stop')?.click();">
+                  <i class="bi bi-slash-circle"></i> DETENER (Q)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN USUARIO 2: ESTADO Y MONITOREO -->
+          <div id="user-section-monitoring" class="user-sub-section d-none">
+            <div class="card text-center p-3 mb-3">
+              <div class="card-title justify-content-center">
+                <i class="bi bi-speedometer2 text-info"></i> Monitoreo en Vivo de tu Unidad
+              </div>
+              <p class="text-muted small mb-2">
+                Consulta el último estado reportado y los últimos diez movimientos individuales persistidos en Amazon RDS.
+              </p>
+              <div>
+                <button class="btn-primary-custom" onclick="document.getElementById('tab-monitoring')?.click();">
+                  <i class="bi bi-table"></i> Ver Panel Completo de Monitoreo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN USUARIO 3: MIS DEMOSTRACIONES -->
+          <div id="user-section-demos" class="user-sub-section d-none">
+            <div class="card mb-3">
+              <div class="card-title"><i class="bi bi-plus-circle text-primary"></i> Crear Demostración Personalizada Propia</div>
+              <form id="form-crear-demo-usuario" class="row g-2">
+                <div class="col-md-5">
+                  <input type="text" class="form-control-custom" id="user-demo-nombre" placeholder="Nombre de tu Demo (ej. Maniobra Garra)" required>
+                </div>
+                <div class="col-md-5">
+                  <input type="text" class="form-control-custom" id="user-demo-desc" placeholder="Descripción de la secuencia">
+                </div>
+                <div class="col-md-2">
+                  <button type="submit" class="btn-primary-custom w-100"><i class="bi bi-save"></i> Crear Demo</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i class="bi bi-stars text-warning"></i> Demostraciones Disponibles para tu Vehículo</div>
+              <div class="table-responsive">
+                <table class="history-table">
+                  <thead>
+                    <tr><th>ID</th><th>Demo</th><th>Tipo</th><th>Descripción</th><th>Acciones</th></tr>
+                  </thead>
+                  <tbody id="tabla-user-demos-body">
+                    <tr><td colspan="5" class="text-center text-muted">Cargando demostraciones…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN USUARIO 4: QR INVITADO 15 SEGUNDOS (USUARIO) -->
+          <div id="user-section-qr" class="user-sub-section d-none">
+            <div class="card guest-timer-card">
+              <div class="card-title"><i class="bi bi-qr-code-scan text-warning"></i> Dar Acceso Temporal a un Invitado (15s)</div>
+              <p class="small text-muted">
+                Comparte tu vehículo de forma segura durante 15 segundos con un amigo o cliente potencial mediante código QR.
+              </p>
+              <div class="text-center mb-3">
+                <button id="btn-generar-qr-usuario" class="btn-primary-custom" type="button">
+                  <i class="bi bi-qr-code"></i> Generar QR de Invitado (15 Segundos)
+                </button>
+              </div>
+
+              <!-- Contenedor del QR y cuenta regresiva -->
+              <div id="qr-user-display-container" class="qr-container d-none">
+                <div class="small text-muted mb-1">Pídele al invitado que escanee este código QR:</div>
+                <div class="qr-image-wrapper">
+                  <img id="qr-user-img" alt="Código QR Invitado" src="" />
+                </div>
+                <div class="small text-muted">Tiempo restante de sesión:</div>
+                <div id="qr-user-countdown" class="guest-countdown-15">15s</div>
+                <div class="timer-progress w-75">
+                  <div id="qr-user-progress" class="timer-progress-fill"></div>
+                </div>
+                <div class="mt-3">
+                  <small class="text-muted d-block mb-1">Enlace directo:</small>
+                  <code id="qr-user-link" class="user-select-all text-break small"></code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════
+             ROL 3: INVITADO (CLIENTE POTENCIAL)
+        ════════════════════════════════════════════════════════════════ -->
+        <div id="guest-role-suite" class="d-none">
+          <div class="card mb-3 text-center p-4">
+            <div style="font-size: 2.5rem;">🌟</div>
+            <h3 class="fw-bold mt-2">Bienvenido a la Experiencia de Exhibición</h3>
+            <p class="text-muted">
+              Como cliente potencial, puedes consultar el catálogo comercial de vehículos y solicitar una sesión de prueba limitada a 15 segundos.
+            </p>
+          </div>
+
+          <div class="card mb-3">
+            <div class="card-title"><i class="bi bi-clock-history text-warning"></i> Sesión Temporal de Exhibición (15 Segundos)</div>
+            <div class="text-center p-2">
+              <p class="small text-muted">Para operar el vehículo de exhibición durante 15 segundos:</p>
+              <button id="btn-activar-sesion-invitado" class="btn-primary-custom" type="button">
+                <i class="bi bi-play-circle-fill"></i> Activar Prueba de 15 Segundos
+              </button>
+              <div id="guest-direct-timer-container" class="mt-3 d-none">
+                <div class="guest-countdown-15" id="guest-direct-countdown">15s</div>
+                <div class="timer-progress w-50 mx-auto">
+                  <div id="guest-direct-progress" class="timer-progress-fill"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i class="bi bi-shop text-info"></i> Catálogo de Vehículos Disponibles</div>
+            <div class="table-responsive">
+              <table class="history-table">
+                <thead><tr><th>Modelo</th><th>Descripción</th><th>Disponibilidad</th></tr></thead>
+                <tbody id="tabla-catalogo-invitado-body">
+                  <tr><td colspan="3" class="text-center text-muted">Cargando catálogo…</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -591,7 +997,7 @@
   </div>
 
   <!-- Módulo JS principal (ES6 modules) -->
-  <script type="module" src="./js/app.js?v=4.4"></script>
+  <script type="module" src="./js/app.js?v=4.5"></script>
 
 </body>
 </html>
