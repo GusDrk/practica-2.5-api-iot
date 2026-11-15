@@ -42,8 +42,8 @@ export class AdminView {
       loginForm.addEventListener('submit', (e) => this.#handleLogin(e));
     }
 
-    // Botón logout
-    const logoutBtn = document.getElementById('btn-admin-logout');
+    // Botón global de cierre de sesión
+    const logoutBtn = document.getElementById('btn-global-logout');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => this.#handleLogout());
     }
@@ -195,11 +195,13 @@ export class AdminView {
     const adminSuite = document.getElementById('admin-role-suite');
     const userSuite = document.getElementById('user-role-suite');
     const guestSuite = document.getElementById('guest-role-suite');
+    const logoutBtn = document.getElementById('btn-global-logout');
 
     // Si NO está logueado: SOLO mostrar formulario de login
     if (!this.#currentUser) {
       if (loginPrompt) loginPrompt.classList.remove('d-none');
       if (panelContent) panelContent.classList.add('d-none');
+      if (logoutBtn) logoutBtn.hidden = true;
       window.dispatchEvent(new CustomEvent('auth:changed', { detail: { user: null } }));
       return;
     }
@@ -207,6 +209,7 @@ export class AdminView {
     // Está logueado: Ocultar login y mostrar panel principal
     if (loginPrompt) loginPrompt.classList.add('d-none');
     if (panelContent) panelContent.classList.remove('d-none');
+    if (logoutBtn) logoutBtn.hidden = false;
 
     const rolId = this.#currentUser.rol_id;
     const email = this.#currentUser.email;
@@ -776,18 +779,66 @@ export class AdminView {
     const tbody = document.getElementById('tabla-user-demo-movimientos-body');
     if (!tbody) return;
     if (!demoId) {
-      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Selecciona una demostración para configurar sus movimientos.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Selecciona una demostración para configurar sus movimientos.</td></tr>';
       return;
     }
     try {
       const resp = await fetch(`${CONFIG.API_BASE_URL}/demos/${demoId}/movimientos`);
       if (!resp.ok) throw new Error();
       const movimientos = await resp.json();
-      tbody.innerHTML = movimientos.length
-        ? movimientos.map(m => `<tr><td>${m.orden}</td><td>${m.nombre || m.comando || `Comando #${m.id_comando}`}</td><td>${m.duracion_ms} ms</td><td>${m.pausa_ms} ms</td></tr>`).join('')
-        : '<tr><td colspan="4" class="text-center text-muted">Todavía no hay movimientos configurados.</td></tr>';
+      this.#renderMovimientosDemoUsuario(movimientos);
     } catch (_) {
-      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">No se pudieron cargar los movimientos.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">No se pudieron cargar los movimientos.</td></tr>';
+    }
+  }
+
+  #renderMovimientosDemoUsuario(movimientos) {
+    const tbody = document.getElementById('tabla-user-demo-movimientos-body');
+    if (!tbody) return;
+    if (!movimientos.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Todavía no hay movimientos configurados.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = movimientos.map(m => {
+      const movementId = m.id_movimiento ?? m.id_demo_movimiento;
+      const commandName = m.nombre || m.comando || `Comando #${m.id_comando}`;
+      return `<tr data-movement-id="${movementId}" data-command-id="${m.id_comando}">
+        <td><input class="form-control-custom demo-movement-order" type="number" min="1" value="${m.orden}" aria-label="Orden de ${commandName}"></td>
+        <td>${commandName}</td>
+        <td><input class="form-control-custom demo-movement-duration" type="number" min="0" value="${m.duracion_ms}" aria-label="Duración de ${commandName} en milisegundos"></td>
+        <td><input class="form-control-custom demo-movement-pause" type="number" min="0" value="${m.pausa_ms}" aria-label="Pausa de ${commandName} en milisegundos"></td>
+        <td><button type="button" class="btn-outline-custom btn-save-demo-movement" title="Guardar cambios"><i class="bi bi-check-lg"></i></button></td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.btn-save-demo-movement').forEach(button => {
+      button.addEventListener('click', () => this.#actualizarMovimientoDemoUsuario(button.closest('tr')));
+    });
+  }
+
+  async #actualizarMovimientoDemoUsuario(row) {
+    const movementId = Number(row?.dataset.movementId);
+    const commandId = Number(row?.dataset.commandId);
+    const order = Number(row?.querySelector('.demo-movement-order')?.value);
+    const duration = Number(row?.querySelector('.demo-movement-duration')?.value);
+    const pause = Number(row?.querySelector('.demo-movement-pause')?.value);
+    if (!movementId || !commandId || order < 1 || duration < 0 || pause < 0) {
+      showToast('Revisa el orden, la duración y la pausa del movimiento', 'warning');
+      return;
+    }
+
+    try {
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/demos/movimientos/${movementId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_comando: commandId, orden: order, duracion_ms: duration, pausa_ms: pause })
+      });
+      if (!resp.ok) throw new Error('No se pudo actualizar el movimiento');
+      showToast('Movimiento actualizado', 'success');
+      this.#cargarMovimientosDemoUsuario();
+    } catch (err) {
+      showToast(err.message || 'No se pudo actualizar el movimiento', 'danger');
     }
   }
 

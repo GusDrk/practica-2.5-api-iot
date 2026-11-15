@@ -80,6 +80,15 @@ p           { color: var(--text-secondary); line-height: 1.6; }
 .header-status {
   flex-shrink: 0;
   order: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-logout {
+  white-space: nowrap;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
 }
 
 .ws-badge {

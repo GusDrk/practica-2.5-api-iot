@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
   <!-- Estilos propios -->
-  <link rel="stylesheet" href="./css/style.css?v=4.6" />
+  <link rel="stylesheet" href="./css/style.css?v=4.7" />
 </head>
 <body>
 
@@ -82,6 +82,9 @@
         <span class="ws-badge-dot" id="header-ws-dot"></span>
         <span class="ws-badge-text" id="header-ws-text">Conectando…</span>
       </span>
+      <button id="btn-global-logout" class="btn-outline-custom header-logout" type="button" hidden>
+        <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Cerrar sesión
+      </button>
     </div>
   </header>
 
@@ -429,11 +432,6 @@
                 <small class="text-muted" id="admin-user-desc">Panel de funciones según privilegios de rol</small>
               </div>
             </div>
-            <div class="d-flex gap-2">
-              <button id="btn-admin-logout" class="btn-outline-custom" type="button">
-                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-              </button>
-            </div>
           </div>
         </section>
 
@@ -523,38 +521,6 @@
                   <button type="submit" class="btn-primary-custom w-100"><i class="bi bi-save"></i> Guardar</button>
                 </div>
               </form>
-            </div>
-
-            <div class="card mb-3">
-              <div class="card-title"><i class="bi bi-list-ol text-info"></i> Configurar movimientos de la demostración</div>
-              <p class="small text-muted mb-3">Elige una demostración propia, agrega los movimientos y define su duración y pausa.</p>
-              <form id="form-agregar-movimiento-demo-usuario" class="row g-2">
-                <div class="col-md-4">
-                  <label class="form-label small" for="user-demo-select">Demostración</label>
-                  <select id="user-demo-select" class="form-control-custom" required><option value="">Crea una demostración primero</option></select>
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label small" for="user-demo-command-select">Movimiento</label>
-                  <select id="user-demo-command-select" class="form-control-custom" required></select>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label small" for="user-demo-duration">Duración (ms)</label>
-                  <input id="user-demo-duration" type="number" class="form-control-custom" min="0" value="1000" required>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label small" for="user-demo-pause">Pausa (ms)</label>
-                  <input id="user-demo-pause" type="number" class="form-control-custom" min="0" value="0" required>
-                </div>
-                <div class="col-md-1 d-flex align-items-end">
-                  <button type="submit" class="btn-primary-custom w-100" title="Agregar movimiento"><i class="bi bi-plus-lg"></i></button>
-                </div>
-              </form>
-              <div class="table-responsive mt-3">
-                <table class="history-table">
-                  <thead><tr><th>Orden</th><th>Movimiento</th><th>Duración</th><th>Pausa</th></tr></thead>
-                  <tbody id="tabla-user-demo-movimientos-body"><tr><td colspan="4" class="text-center text-muted">Selecciona una demostración para configurar sus movimientos.</td></tr></tbody>
-                </table>
-              </div>
             </div>
 
             <div class="card">
@@ -831,6 +797,38 @@
               </form>
             </div>
 
+            <div class="card mb-3">
+              <div class="card-title"><i class="bi bi-list-ol text-info"></i> Control de movimientos</div>
+              <p class="small text-muted mb-3">Selecciona una demostración propia para agregar movimientos o cambiar el orden, duración y pausa de sus pasos.</p>
+              <form id="form-agregar-movimiento-demo-usuario" class="row g-2">
+                <div class="col-md-4">
+                  <label class="form-label small" for="user-demo-select">Demostración</label>
+                  <select id="user-demo-select" class="form-control-custom" required><option value="">Crea una demostración primero</option></select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small" for="user-demo-command-select">Movimiento</label>
+                  <select id="user-demo-command-select" class="form-control-custom" required></select>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small" for="user-demo-duration">Duración (ms)</label>
+                  <input id="user-demo-duration" type="number" class="form-control-custom" min="0" value="1000" required>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small" for="user-demo-pause">Pausa (ms)</label>
+                  <input id="user-demo-pause" type="number" class="form-control-custom" min="0" value="0" required>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                  <button type="submit" class="btn-primary-custom w-100" title="Agregar movimiento"><i class="bi bi-plus-lg"></i></button>
+                </div>
+              </form>
+              <div class="table-responsive mt-3">
+                <table class="history-table">
+                  <thead><tr><th>Orden</th><th>Movimiento</th><th>Duración</th><th>Pausa</th><th></th></tr></thead>
+                  <tbody id="tabla-user-demo-movimientos-body"><tr><td colspan="5" class="text-center text-muted">Selecciona una demostración para configurar sus movimientos.</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
             <div class="card">
               <div class="card-title"><i class="bi bi-stars text-warning"></i> Demostraciones Disponibles para tu Vehículo</div>
               <div class="table-responsive">
@@ -944,7 +942,7 @@
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
   <!-- Módulo JS principal (ES6 modules) -->
-  <script type="module" src="./js/app.js?v=4.6"></script>
+  <script type="module" src="./js/app.js?v=4.7"></script>
 
 </body>
 </html>
