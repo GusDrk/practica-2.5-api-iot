@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS sesiones_invitado (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vehiculo_id INT NOT NULL,
     token VARCHAR(255) NOT NULL UNIQUE,
-    duracion_segundos INT DEFAULT 300,
+    duracion_segundos INT DEFAULT 45,
     inicio DATETIME DEFAULT CURRENT_TIMESTAMP,
     expiracion DATETIME NOT NULL,
     activo BOOLEAN DEFAULT TRUE,

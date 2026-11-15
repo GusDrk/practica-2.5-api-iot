@@ -272,7 +272,7 @@ class AdminService:
     # ─────────────────────────────────────────────────────────────
     # SESIÓN DE INVITADO CON QR (15 SEGUNDOS)
     # ─────────────────────────────────────────────────────────────
-    def crear_sesion_invitado(self, vehiculo_id: int, duracion_segundos: int = 15) -> Dict[str, Any]:
+    def crear_sesion_invitado(self, vehiculo_id: int, duracion_segundos: int = 45) -> Dict[str, Any]:
         token = secrets.token_urlsafe(16)
         inicio = datetime.utcnow()
         expiracion = inicio + timedelta(seconds=duracion_segundos)

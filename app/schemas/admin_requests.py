@@ -23,7 +23,7 @@ class SoporteToggleRequest(BaseModel):
 
 class InvitadoReservaRequest(BaseModel):
     vehiculo_id: int = Field(default=1, description="ID del vehículo a compartir")
-    duracion_segundos: int = Field(default=15, description="Duración en segundos (15s)")
+    duracion_segundos: int = Field(default=45, description="Duración en segundos (45s)")
 
 class ModeloCrear(BaseModel):
     nombre: str

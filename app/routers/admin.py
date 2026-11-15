@@ -217,12 +217,12 @@ def build_admin_router(db: Database) -> APIRouter:
     # ─────────────────────────────────────────────────────────────
     # SESIÓN DE INVITADO CON QR (15 SEGUNDOS)
     # ─────────────────────────────────────────────────────────────
-    @router.post("/invitado/sesion", summary="Generar sesión de prueba de invitado con QR (15s)")
+    @router.post("/invitado/sesion", summary="Generar sesión de prueba de invitado con QR (45s)")
     def crear_sesion_invitado(payload: InvitadoReservaRequest):
         try:
             return service.crear_sesion_invitado(
                 vehiculo_id=payload.vehiculo_id,
-                duracion_segundos=payload.duracion_segundos or 15
+                duracion_segundos=payload.duracion_segundos or 45
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error al crear sesión de invitado: {str(e)}")

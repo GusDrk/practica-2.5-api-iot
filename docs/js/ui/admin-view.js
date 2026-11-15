@@ -1,7 +1,7 @@
 /**
  * admin-view.js — Interfaz del módulo de ADMINISTRACIÓN
  * Soporta vistas diferenciadas por ROL (ADMINISTRADOR / USUARIO / INVITADO)
- * y generación de accesos temporales con código QR de 15 segundos.
+ * y generación de accesos temporales con código QR de 45 segundos.
  */
 
 import { showToast } from '../utils/toast.js';
@@ -146,6 +146,16 @@ export class AdminView {
       formDemoUser.addEventListener('submit', (e) => this.#handleCrearDemoUsuario(e));
     }
 
+    const demoSelect = document.getElementById('user-demo-select');
+    if (demoSelect) {
+      demoSelect.addEventListener('change', () => this.#cargarMovimientosDemoUsuario());
+    }
+
+    const formMovimientoDemo = document.getElementById('form-agregar-movimiento-demo-usuario');
+    if (formMovimientoDemo) {
+      formMovimientoDemo.addEventListener('submit', (e) => this.#handleAgregarMovimientoDemoUsuario(e));
+    }
+
     // QR Invitado (Usuario)
     const btnQrUser = document.getElementById('btn-generar-qr-usuario');
     if (btnQrUser) {
@@ -190,6 +200,7 @@ export class AdminView {
     if (!this.#currentUser) {
       if (loginPrompt) loginPrompt.classList.remove('d-none');
       if (panelContent) panelContent.classList.add('d-none');
+      window.dispatchEvent(new CustomEvent('auth:changed', { detail: { user: null } }));
       return;
     }
 
@@ -219,7 +230,9 @@ export class AdminView {
     // Mostrar suite según rol
     if (adminSuite) adminSuite.classList.toggle('d-none', rolId !== 1);
     if (userSuite) userSuite.classList.toggle('d-none', rolId !== 2);
-    if (guestSuite) guestSuite.classList.toggle('d-none', rolId !== 3);
+    if (guestSuite) guestSuite.classList.add('d-none');
+
+    window.dispatchEvent(new CustomEvent('auth:changed', { detail: { user: this.#currentUser } }));
 
     // Cargar datos correspondientes
     this.refreshCurrentRoleData();
@@ -669,6 +682,7 @@ export class AdminView {
     // Recargar monitoreo de su vehículo
     monitoringService.loadInitialData().catch(() => {});
     this.cargarMisDemos();
+    this.#cargarComandosDemoUsuario();
   }
 
   async cargarMisDemos() {
@@ -681,6 +695,8 @@ export class AdminView {
       const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/mis-demos?usuario_id=${this.#currentUser.id}&vehiculo_id=${vid}`);
       if (!resp.ok) return;
       const demos = await resp.json();
+
+      this.#actualizarSelectorDemosUsuario(demos);
 
       if (!demos.length) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Aún no has creado demostraciones personalizadas</td></tr>';
@@ -725,6 +741,77 @@ export class AdminView {
         }
       };
     } catch (_) {}
+  }
+
+  #actualizarSelectorDemosUsuario(demos) {
+    const select = document.getElementById('user-demo-select');
+    if (!select) return;
+    const previous = select.value;
+    const propias = demos.filter(d => !d.es_fabrica && d.usuario_id === this.#currentUser?.id);
+    select.innerHTML = propias.length
+      ? propias.map(d => `<option value="${d.id_demo}">${d.nombre}</option>`).join('')
+      : '<option value="">Crea una demostración propia para agregar movimientos</option>';
+    if (propias.some(d => String(d.id_demo) === previous)) select.value = previous;
+    this.#cargarMovimientosDemoUsuario();
+  }
+
+  async #cargarComandosDemoUsuario() {
+    const select = document.getElementById('user-demo-command-select');
+    if (!select) return;
+    try {
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/vehiculos/${CONFIG.VEHICLE_ID}/comandos`);
+      if (!resp.ok) throw new Error();
+      const comandos = await resp.json();
+      select.innerHTML = comandos
+        .filter(comando => comando.activo)
+        .map(comando => `<option value="${comando.id_comando}">${comando.nombre}</option>`)
+        .join('');
+    } catch (_) {
+      select.innerHTML = '<option value="">No se pudieron cargar los movimientos</option>';
+    }
+  }
+
+  async #cargarMovimientosDemoUsuario() {
+    const demoId = document.getElementById('user-demo-select')?.value;
+    const tbody = document.getElementById('tabla-user-demo-movimientos-body');
+    if (!tbody) return;
+    if (!demoId) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Selecciona una demostración para configurar sus movimientos.</td></tr>';
+      return;
+    }
+    try {
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/demos/${demoId}/movimientos`);
+      if (!resp.ok) throw new Error();
+      const movimientos = await resp.json();
+      tbody.innerHTML = movimientos.length
+        ? movimientos.map(m => `<tr><td>${m.orden}</td><td>${m.nombre || m.comando || `Comando #${m.id_comando}`}</td><td>${m.duracion_ms} ms</td><td>${m.pausa_ms} ms</td></tr>`).join('')
+        : '<tr><td colspan="4" class="text-center text-muted">Todavía no hay movimientos configurados.</td></tr>';
+    } catch (_) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">No se pudieron cargar los movimientos.</td></tr>';
+    }
+  }
+
+  async #handleAgregarMovimientoDemoUsuario(e) {
+    e.preventDefault();
+    const demoId = Number(document.getElementById('user-demo-select')?.value);
+    const commandId = Number(document.getElementById('user-demo-command-select')?.value);
+    const duration = Number(document.getElementById('user-demo-duration')?.value);
+    const pause = Number(document.getElementById('user-demo-pause')?.value);
+    if (!demoId || !commandId || duration < 0 || pause < 0) return;
+
+    try {
+      const current = await fetch(`${CONFIG.API_BASE_URL}/demos/${demoId}/movimientos`).then(r => r.ok ? r.json() : Promise.reject());
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/demos/movimientos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_demo: demoId, id_comando: commandId, orden: current.length + 1, duracion_ms: duration, pausa_ms: pause })
+      });
+      if (!resp.ok) throw new Error('No se pudo agregar el movimiento');
+      showToast('Movimiento agregado a la demostración', 'success');
+      this.#cargarMovimientosDemoUsuario();
+    } catch (err) {
+      showToast(err.message || 'No se pudo agregar el movimiento', 'danger');
+    }
   }
 
   async #handleCrearDemoUsuario(e) {
@@ -788,15 +875,15 @@ export class AdminView {
       const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/invitado/sesion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vehiculo_id: 1, duracion_segundos: 15 })
+        body: JSON.stringify({ vehiculo_id: 1, duracion_segundos: 45 })
       });
       if (!resp.ok) throw new Error('Fallo al activar sesión de invitado');
 
-      showToast('¡Sesión de prueba de 15 segundos activada! Puedes operar la unidad.', 'success');
+      showToast('¡Sesión de prueba de 45 segundos activada! Puedes operar la unidad.', 'success');
       if (container) container.classList.remove('d-none');
 
-      let restante = 15;
-      const duracion = 15;
+      let restante = 45;
+      const duracion = 45;
 
       const intId = setInterval(() => {
         restante--;
@@ -806,7 +893,7 @@ export class AdminView {
         if (restante <= 0) {
           clearInterval(intId);
           if (display) display.textContent = '0s (Expirado)';
-          showToast('La sesión de prueba de 15 segundos ha finalizado.', 'warning');
+          showToast('La sesión de prueba de 45 segundos ha finalizado.', 'warning');
         }
       }, 1000);
     } catch (err) {
@@ -815,7 +902,7 @@ export class AdminView {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // GENERADOR DE CÓDIGO QR PARA INVITADO (15 SEGUNDOS)
+  // GENERADOR DE CÓDIGO QR PARA INVITADO (45 SEGUNDOS)
   // Utilizado tanto por ADMINISTRADOR como por USUARIO
   // ─────────────────────────────────────────────────────────────
   async #iniciarSesionQR(vehiculoId, containerId, imgId, countdownId, progressId, linkId, isAdmin = false) {
@@ -826,14 +913,14 @@ export class AdminView {
     const linkEl = document.getElementById(linkId);
 
     try {
-      // 1. Solicitar sesión de invitado de 15 segundos al backend
+      // 1. Solicitar sesión de invitado de 45 segundos al backend
       const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/invitado/sesion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vehiculo_id: vehiculoId, duracion_segundos: 15 })
+        body: JSON.stringify({ vehiculo_id: vehiculoId, duracion_segundos: 45 })
       });
 
-      if (!resp.ok) throw new Error('No se pudo generar la sesión temporal de 15s');
+      if (!resp.ok) throw new Error('No se pudo generar la sesión temporal de 45 s');
       const data = await resp.json();
 
       // 2. Construir URL para el invitado
@@ -852,10 +939,10 @@ export class AdminView {
       }
 
       if (container) container.classList.remove('d-none');
-      showToast('Acceso QR de 15 segundos generado exitosamente', 'success');
+      showToast('Acceso QR de 45 segundos generado exitosamente', 'success');
 
-      // 4. Temporizador regresivo en vivo de 15 segundos
-      const duracionTotal = 15;
+      // 4. Temporizador regresivo en vivo de 45 segundos
+      const duracionTotal = 45;
       let restante = duracionTotal;
 
       if (isAdmin && this.#guestTimerInterval) clearInterval(this.#guestTimerInterval);
@@ -878,7 +965,7 @@ export class AdminView {
           else clearInterval(this.#userGuestTimerInterval);
 
           if (countdownEl) countdownEl.textContent = '0s (Expirado)';
-          showToast('La sesión de invitado (15s) ha expirado.', 'warning');
+          showToast('La sesión de invitado (45 s) ha expirado.', 'warning');
         }
         restante--;
       };

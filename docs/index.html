@@ -43,11 +43,11 @@
     <nav class="app-navigation" role="tablist" aria-label="Secciones de la aplicación">
       <button
         id="tab-control"
-        class="nav-tab active"
+        class="nav-tab"
         role="tab"
-        aria-selected="true"
+        aria-selected="false"
         aria-controls="view-control"
-        tabindex="0"
+        tabindex="-1"
       >
         <i class="bi bi-controller" aria-hidden="true"></i>
         <span>Control</span>
@@ -93,7 +93,7 @@
     <!-- ═════════════════════════════════════════
          VISTA 1: CONTROL (Módulo de operación)
     ═════════════════════════════════════════ -->
-    <div id="view-control" class="view-panel active" role="tabpanel" aria-labelledby="tab-control">
+    <div id="view-control" class="view-panel" role="tabpanel" aria-labelledby="tab-control" hidden>
 
       <!-- Bloque Superior: Movimientos a la izquierda, Conectividad e Información a la derecha -->
       <div class="main-dashboard-grid">
@@ -463,7 +463,7 @@
               <i class="bi bi-shield-check"></i> Auditoría & Soporte
             </button>
             <button type="button" class="role-pill-btn" data-target="admin-section-qr">
-              <i class="bi bi-qr-code"></i> Acceso Invitado (QR 15s)
+              <i class="bi bi-qr-code"></i> Acceso invitado (QR 45 s)
             </button>
           </div>
 
@@ -523,6 +523,38 @@
                   <button type="submit" class="btn-primary-custom w-100"><i class="bi bi-save"></i> Guardar</button>
                 </div>
               </form>
+            </div>
+
+            <div class="card mb-3">
+              <div class="card-title"><i class="bi bi-list-ol text-info"></i> Configurar movimientos de la demostración</div>
+              <p class="small text-muted mb-3">Elige una demostración propia, agrega los movimientos y define su duración y pausa.</p>
+              <form id="form-agregar-movimiento-demo-usuario" class="row g-2">
+                <div class="col-md-4">
+                  <label class="form-label small" for="user-demo-select">Demostración</label>
+                  <select id="user-demo-select" class="form-control-custom" required><option value="">Crea una demostración primero</option></select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small" for="user-demo-command-select">Movimiento</label>
+                  <select id="user-demo-command-select" class="form-control-custom" required></select>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small" for="user-demo-duration">Duración (ms)</label>
+                  <input id="user-demo-duration" type="number" class="form-control-custom" min="0" value="1000" required>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small" for="user-demo-pause">Pausa (ms)</label>
+                  <input id="user-demo-pause" type="number" class="form-control-custom" min="0" value="0" required>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                  <button type="submit" class="btn-primary-custom w-100" title="Agregar movimiento"><i class="bi bi-plus-lg"></i></button>
+                </div>
+              </form>
+              <div class="table-responsive mt-3">
+                <table class="history-table">
+                  <thead><tr><th>Orden</th><th>Movimiento</th><th>Duración</th><th>Pausa</th></tr></thead>
+                  <tbody id="tabla-user-demo-movimientos-body"><tr><td colspan="4" class="text-center text-muted">Selecciona una demostración para configurar sus movimientos.</td></tr></tbody>
+                </table>
+              </div>
             </div>
 
             <div class="card">
@@ -710,9 +742,9 @@
           <!-- SECCIÓN 7: QR INVITADO 15 SEGUNDOS (ADMIN) -->
           <div id="admin-section-qr" class="admin-sub-section d-none">
             <div class="card guest-timer-card">
-              <div class="card-title"><i class="bi bi-qr-code-scan text-warning"></i> Conceder Acceso a Invitado con QR (15 Segundos)</div>
+              <div class="card-title"><i class="bi bi-qr-code-scan text-warning"></i> Conceder acceso a invitado con QR (45 segundos)</div>
               <p class="small text-muted">
-                Genera un código QR de acceso temporal para que un cliente potencial opere una unidad de exhibición durante 15 segundos exactos.
+                Genera un código QR de acceso temporal para que un cliente potencial opere una unidad de exhibición durante 45 segundos.
               </p>
               <div class="row g-2 mb-3">
                 <div class="col-md-6">
@@ -722,7 +754,7 @@
                 </div>
                 <div class="col-md-6">
                   <button id="btn-generar-qr-admin" class="btn-primary-custom w-100" type="button">
-                    <i class="bi bi-qr-code"></i> Generar QR de Acceso (15s)
+                    <i class="bi bi-qr-code"></i> Generar QR de acceso (45 s)
                   </button>
                 </div>
               </div>
@@ -734,7 +766,7 @@
                   <img id="qr-admin-img" alt="Código QR Invitado" src="" />
                 </div>
                 <div class="small text-muted">Tiempo restante de sesión:</div>
-                <div id="qr-admin-countdown" class="guest-countdown-15">15s</div>
+                <div id="qr-admin-countdown" class="guest-countdown-15">45 s</div>
                 <div class="timer-progress w-75">
                   <div id="qr-admin-progress" class="timer-progress-fill"></div>
                 </div>
@@ -774,59 +806,16 @@
 
           <!-- Pestañas secundarias de Usuario -->
           <div class="role-nav-pills">
-            <button type="button" class="role-pill-btn active" data-target="user-section-control">
-              <i class="bi bi-controller"></i> Control & Movimiento
-            </button>
-            <button type="button" class="role-pill-btn" data-target="user-section-monitoring">
-              <i class="bi bi-speedometer2"></i> Estado & Historial
-            </button>
-            <button type="button" class="role-pill-btn" data-target="user-section-demos">
-              <i class="bi bi-stars"></i> Mis Demostraciones
+            <button type="button" class="role-pill-btn active" data-target="user-section-demos">
+              <i class="bi bi-sliders"></i> Configurar demostraciones
             </button>
             <button type="button" class="role-pill-btn" data-target="user-section-qr">
-              <i class="bi bi-qr-code"></i> Dar Acceso a Invitado (15s)
+              <i class="bi bi-qr-code"></i> Dar acceso a invitado (45 s)
             </button>
           </div>
 
-          <!-- SECCIÓN USUARIO 1: CONTROL Y MOVIMIENTO -->
-          <div id="user-section-control" class="user-sub-section">
-            <div class="card text-center p-3">
-              <div class="card-title justify-content-center mb-3">
-                <i class="bi bi-joystick text-primary"></i> Operación del Vehículo Asignado
-              </div>
-              <p class="text-muted small mb-3">
-                Puedes controlar tu unidad asignada directamente con el Joystick y los botones de movimiento, o cambiar a la vista general de Control.
-              </p>
-              <div class="d-flex justify-content-center gap-3">
-                <button class="btn-primary-custom" onclick="document.getElementById('tab-control')?.click();">
-                  <i class="bi bi-fullscreen"></i> Abrir Cockpit Completo de Control
-                </button>
-                <button class="btn-danger-custom" id="user-btn-stop-quick" onclick="document.getElementById('btn-stop')?.click();">
-                  <i class="bi bi-slash-circle"></i> DETENER (Q)
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- SECCIÓN USUARIO 2: ESTADO Y MONITOREO -->
-          <div id="user-section-monitoring" class="user-sub-section d-none">
-            <div class="card text-center p-3 mb-3">
-              <div class="card-title justify-content-center">
-                <i class="bi bi-speedometer2 text-info"></i> Monitoreo en Vivo de tu Unidad
-              </div>
-              <p class="text-muted small mb-2">
-                Consulta el último estado reportado y los últimos diez movimientos individuales persistidos en Amazon RDS.
-              </p>
-              <div>
-                <button class="btn-primary-custom" onclick="document.getElementById('tab-monitoring')?.click();">
-                  <i class="bi bi-table"></i> Ver Panel Completo de Monitoreo
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- SECCIÓN USUARIO 3: MIS DEMOSTRACIONES -->
-          <div id="user-section-demos" class="user-sub-section d-none">
+          <!-- CONFIGURACIÓN DE DEMOSTRACIONES DEL USUARIO -->
+          <div id="user-section-demos" class="user-sub-section">
             <div class="card mb-3">
               <div class="card-title"><i class="bi bi-plus-circle text-primary"></i> Crear Demostración Personalizada Propia</div>
               <form id="form-crear-demo-usuario" class="row g-2">
@@ -857,16 +846,16 @@
             </div>
           </div>
 
-          <!-- SECCIÓN USUARIO 4: QR INVITADO 15 SEGUNDOS (USUARIO) -->
+          <!-- ACCESO QR PARA INVITADO (USUARIO) -->
           <div id="user-section-qr" class="user-sub-section d-none">
             <div class="card guest-timer-card">
-              <div class="card-title"><i class="bi bi-qr-code-scan text-warning"></i> Dar Acceso Temporal a un Invitado (15s)</div>
+              <div class="card-title"><i class="bi bi-qr-code-scan text-warning"></i> Dar acceso temporal a un invitado (45 s)</div>
               <p class="small text-muted">
-                Comparte tu vehículo de forma segura durante 15 segundos con un amigo o cliente potencial mediante código QR.
+                Comparte tu vehículo durante 45 segundos con un amigo o cliente potencial mediante código QR.
               </p>
               <div class="text-center mb-3">
                 <button id="btn-generar-qr-usuario" class="btn-primary-custom" type="button">
-                  <i class="bi bi-qr-code"></i> Generar QR de Invitado (15 Segundos)
+                  <i class="bi bi-qr-code"></i> Generar QR de invitado (45 segundos)
                 </button>
               </div>
 
@@ -877,7 +866,7 @@
                   <img id="qr-user-img" alt="Código QR Invitado" src="" />
                 </div>
                 <div class="small text-muted">Tiempo restante de sesión:</div>
-                <div id="qr-user-countdown" class="guest-countdown-15">15s</div>
+                <div id="qr-user-countdown" class="guest-countdown-15">45 s</div>
                 <div class="timer-progress w-75">
                   <div id="qr-user-progress" class="timer-progress-fill"></div>
                 </div>
@@ -899,19 +888,19 @@
             <div style="font-size: 2.5rem;">🌟</div>
             <h3 class="fw-bold mt-2">Bienvenido a la Experiencia de Exhibición</h3>
             <p class="text-muted">
-              Como cliente potencial, puedes consultar el catálogo comercial de vehículos y solicitar una sesión de prueba limitada a 15 segundos.
+              Como cliente potencial, puedes consultar el catálogo comercial de vehículos y solicitar una sesión de prueba limitada a 45 segundos.
             </p>
           </div>
 
           <div class="card mb-3">
-            <div class="card-title"><i class="bi bi-clock-history text-warning"></i> Sesión Temporal de Exhibición (15 Segundos)</div>
+            <div class="card-title"><i class="bi bi-clock-history text-warning"></i> Sesión Temporal de Exhibición (45 segundos)</div>
             <div class="text-center p-2">
-              <p class="small text-muted">Para operar el vehículo de exhibición durante 15 segundos:</p>
+              <p class="small text-muted">Para operar el vehículo de exhibición durante 45 segundos:</p>
               <button id="btn-activar-sesion-invitado" class="btn-primary-custom" type="button">
-                <i class="bi bi-play-circle-fill"></i> Activar Prueba de 15 Segundos
+                <i class="bi bi-play-circle-fill"></i> Activar prueba de 45 segundos
               </button>
               <div id="guest-direct-timer-container" class="mt-3 d-none">
-                <div class="guest-countdown-15" id="guest-direct-countdown">15s</div>
+                <div class="guest-countdown-15" id="guest-direct-countdown">45 s</div>
                 <div class="timer-progress w-50 mx-auto">
                   <div id="guest-direct-progress" class="timer-progress-fill"></div>
                 </div>
@@ -955,7 +944,7 @@
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
   <!-- Módulo JS principal (ES6 modules) -->
-  <script type="module" src="./js/app.js?v=4.5"></script>
+  <script type="module" src="./js/app.js?v=4.6"></script>
 
 </body>
 </html>

@@ -23,7 +23,7 @@ class SesionInvitado(BaseModel):
     id: int
     vehiculo_id: int
     token: str
-    duracion_segundos: int = 300
+    duracion_segundos: int = 45
     inicio: datetime
     expiracion: datetime
     activo: bool = True
