@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
   <!-- Estilos propios -->
-  <link rel="stylesheet" href="./css/style.css?v=4.5" />
+  <link rel="stylesheet" href="./css/style.css?v=4.6" />
 </head>
 <body>
 
@@ -953,48 +953,6 @@
 
   <!-- Contenedor de notificaciones toast -->
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
-
-  <!-- Modal de Autenticación / Login -->
-  <div id="loginModal" class="modal-overlay" hidden>
-    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-login-title">
-      <div class="modal-header-custom">
-        <h3 id="modal-login-title" class="m-0"><i class="bi bi-person-circle text-primary"></i> Iniciar Sesión</h3>
-        <button type="button" class="modal-close-btn" onclick="document.getElementById('loginModal').setAttribute('hidden', '')" aria-label="Cerrar">&times;</button>
-      </div>
-
-      <form id="admin-login-form">
-        <div class="form-group-custom">
-          <label for="login-email">Usuario</label>
-          <input type="text" id="login-email" class="form-control-custom" placeholder="admin / usuario / invitado" required autocomplete="username">
-        </div>
-        <div class="form-group-custom">
-          <label for="login-password">Contraseña</label>
-          <input type="password" id="login-password" class="form-control-custom" placeholder="••••••••" required autocomplete="current-password">
-        </div>
-
-        <!-- Accesos rápidos predeterminados -->
-        <div class="mb-3">
-          <small class="text-muted d-block mb-1">Usuarios predeterminados:</small>
-          <div class="d-flex flex-wrap gap-1">
-            <button type="button" class="btn-outline-custom" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="document.getElementById('login-email').value='admin'; document.getElementById('login-password').value='admin12345';">
-              Admin (admin12345)
-            </button>
-            <button type="button" class="btn-outline-custom" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="document.getElementById('login-email').value='usuario'; document.getElementById('login-password').value='usuario12345';">
-              Usuario (usuario12345)
-            </button>
-            <button type="button" class="btn-outline-custom" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="document.getElementById('login-email').value='invitado'; document.getElementById('login-password').value='invitado12345';">
-              Invitado (invitado12345)
-            </button>
-          </div>
-        </div>
-
-        <div class="d-flex justify-content-end gap-2 mt-4">
-          <button type="button" class="btn-outline-custom" onclick="document.getElementById('loginModal').setAttribute('hidden', '')">Cancelar</button>
-          <button type="submit" class="btn-primary-custom">Entrar</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- Módulo JS principal (ES6 modules) -->
   <script type="module" src="./js/app.js?v=4.5"></script>
