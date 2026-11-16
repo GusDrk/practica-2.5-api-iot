@@ -86,6 +86,18 @@ class AdminService:
             }
         return None
 
+    def obtener_usuario_invitado(self) -> Optional[Dict[str, Any]]:
+        """Devuelve la cuenta activa reservada para accesos mediante QR."""
+        sql = """
+            SELECT u.id, u.email, u.rol_id, r.nombre AS rol
+            FROM usuarios u
+            LEFT JOIN roles r ON r.id = u.rol_id
+            WHERE u.rol_id = 3 AND u.activo = 1
+            LIMIT 1
+        """
+        rows = self.db.fetch_all(sql)
+        return rows[0] if rows else None
+
     # ─────────────────────────────────────────────────────────────
     # MODELOS DE VEHÍCULOS (ADMINISTRADOR)
     # ─────────────────────────────────────────────────────────────

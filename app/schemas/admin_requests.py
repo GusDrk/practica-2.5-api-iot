@@ -20,6 +20,11 @@ class LoginRequest(BaseModel):
         description="Token temporal obligatorio para el acceso de invitado"
     )
 
+
+class InvitadoAccesoRequest(BaseModel):
+    """Token de un enlace QR para iniciar la sesión temporal de invitado."""
+    token: str = Field(..., min_length=1)
+
 class SoporteToggleRequest(BaseModel):
     vehiculo_id: int
     habilitado: bool

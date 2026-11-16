@@ -20,6 +20,7 @@ export class AdminView {
     this.#loadSession();
     this.#initEvents();
     this.renderRoleView();
+    this.#iniciarAccesoInvitadoDesdeQR();
   }
 
   #loadSession() {
@@ -310,6 +311,44 @@ export class AdminView {
       showToast(err.message, 'danger');
     } finally {
       if (submitBtn) submitBtn.disabled = false;
+    }
+  }
+
+  async #iniciarAccesoInvitadoDesdeQR() {
+    const token = new URLSearchParams(window.location.search).get('token');
+    if (!token) return;
+
+    // El enlace QR siempre representa una sesión de invitado nueva, incluso
+    // si el navegador conservaba una sesión previa de otro rol.
+    this.#currentUser = null;
+    localStorage.removeItem('iot_user');
+    localStorage.removeItem('iot_token');
+    this.renderRoleView();
+
+    try {
+      const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/invitado/acceso`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.detail || 'No fue posible validar el acceso de invitado');
+      }
+
+      const data = await resp.json();
+      this.#currentUser = data.usuario;
+      this.#currentUser.guest_session = data.sesion_invitado;
+      CONFIG.VEHICLE_ID = data.sesion_invitado.vehiculo_id;
+      localStorage.setItem('iot_user', JSON.stringify(this.#currentUser));
+      if (data.token) localStorage.setItem('iot_token', data.token);
+
+      // El token es de un solo uso y no debe permanecer en la barra de URL.
+      window.history.replaceState({}, document.title, window.location.pathname);
+      showToast('Acceso de invitado iniciado', 'success');
+      this.renderRoleView();
+    } catch (err) {
+      showToast(err.message, 'danger');
     }
   }
 

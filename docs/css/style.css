@@ -1467,6 +1467,27 @@ input:checked + .slider:before {
   color: var(--accent);
 }
 
+.gyroscope-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+
+#btn-gyroscope.is-active {
+  border-color: var(--success);
+  color: var(--success);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.22);
+}
+
+.gyroscope-help {
+  margin: 0.45rem 0 0;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
 /* ── Subnavegación por pestañas de Rol ──────────────── */
 .role-nav-pills {
   display: flex;

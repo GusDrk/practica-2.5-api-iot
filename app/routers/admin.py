@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Optional
 from app.database.mysql import Database
 from app.services.admin_service import AdminService
 from app.schemas.admin_requests import (
-    UsuarioCrear, UsuarioActualizar, LoginRequest,
+    UsuarioCrear, UsuarioActualizar, LoginRequest, InvitadoAccesoRequest,
     SoporteToggleRequest, InvitadoReservaRequest,
     ModeloCrear, ModeloActualizar, UnidadCrear, AsignarVehiculoRequest,
     DemoUsuarioCrear
@@ -47,6 +47,34 @@ def build_admin_router(db: Database) -> APIRouter:
                 "expiracion": sesion["expiracion"].isoformat() + "Z"
             }
         return respuesta
+
+    @router.post("/invitado/acceso", summary="Ingresar directamente con un enlace QR de invitado")
+    def acceso_invitado_qr(payload: InvitadoAccesoRequest):
+        """Canjea un token QR de un solo uso sin solicitar credenciales."""
+        user = service.obtener_usuario_invitado()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="La cuenta de invitado no está disponible."
+            )
+
+        sesion = service.reclamar_sesion_invitado(payload.token)
+        if not sesion:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="El enlace ya fue utilizado, se cerró o expiró."
+            )
+
+        return {
+            "autenticado": True,
+            "usuario": user,
+            "token": f"sess_{user['id']}_{user['rol_id']}",
+            "sesion_invitado": {
+                "token": payload.token,
+                "vehiculo_id": sesion["vehiculo_id"],
+                "expiracion": sesion["expiracion"].isoformat() + "Z"
+            }
+        }
 
     @router.get("/usuarios", summary="Obtener lista de usuarios registrados")
     def get_usuarios():

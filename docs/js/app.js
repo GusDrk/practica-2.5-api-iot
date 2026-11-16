@@ -8,6 +8,7 @@ import { commandService, CMD_STATE } from './domain/commands.js';
 import { demoService }      from './domain/demo.js';
 import { monitoringService } from './domain/monitoring.js';
 import { Joystick }         from './ui/joystick.js';
+import { GyroscopeControl } from './ui/gyroscope.js';
 import { SecondaryButtons } from './ui/buttons.js';
 import { ConnectivityPanel } from './ui/connectivity.js';
 import { DemoPanel }        from './ui/demo-panel.js';
@@ -42,6 +43,9 @@ function init() {
 
   // 6. Joystick
   new Joystick('#joystick-container');
+
+  // 6.1 Control de dirección por inclinación del teléfono (opcional)
+  new GyroscopeControl();
 
   // 7. Botones secundarios (Garra, Bocina)
   new SecondaryButtons();
