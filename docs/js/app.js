@@ -14,7 +14,7 @@ import { ConnectivityPanel } from './ui/connectivity.js';
 import { DemoPanel }        from './ui/demo-panel.js';
 import { Navigation }       from './ui/navigation.js';
 import { MonitoringView }   from './ui/monitoring-view.js';
-import { AdminView }        from './ui/admin-view.js?v=4.8';
+import { AdminView }        from './ui/admin-view.js?v=4.9';
 import { messageService }   from './ui/messages.js';
 import { formatCommandName } from './utils/command-formatter.js';
 import { COMMANDS, ENDPOINTS, CONFIG } from './config.js?v=2.5';
