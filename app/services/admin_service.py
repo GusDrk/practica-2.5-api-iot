@@ -281,7 +281,12 @@ class AdminService:
         duracion_segundos = 45
 
         with self.db.connection() as conn:
-            cursor = conn.cursor(dictionary=True)
+            # GET_LOCK y RELEASE_LOCK devuelven conjuntos de resultados. Un
+            # cursor no buffered puede dejar esos resultados pendientes si se
+            # ejecuta la siguiente sentencia antes de consumirlos por
+            # completo, causando ``Unread result found``. Al usar buffer los
+            # resultados de estas consultas se leen de inmediato.
+            cursor = conn.cursor(dictionary=True, buffered=True)
             bloqueo_obtenido = False
             try:
                 # El candado de MySQL serializa la comprobación aun si la tabla
@@ -326,6 +331,9 @@ class AdminService:
                     conn.commit()
                 if bloqueo_obtenido:
                     cursor.execute("SELECT RELEASE_LOCK('iot_guest_session_create')")
+                    # RELEASE_LOCK también devuelve una fila; consumirla antes
+                    # de cerrar el cursor o devolver la conexión al pool.
+                    cursor.fetchone()
                 cursor.close()
 
         return {
