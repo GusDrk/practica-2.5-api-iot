@@ -15,6 +15,10 @@ class UsuarioActualizar(BaseModel):
 class LoginRequest(BaseModel):
     email: str = Field(..., description="Nombre de usuario o correo")
     password: str
+    guest_token: Optional[str] = Field(
+        default=None,
+        description="Token temporal obligatorio para el acceso de invitado"
+    )
 
 class SoporteToggleRequest(BaseModel):
     vehiculo_id: int

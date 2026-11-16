@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS modelos_vehiculo (
 INSERT IGNORE INTO modelos_vehiculo (id, nombre, descripcion) VALUES
     (1, 'Rover Explorer 4WD', 'Vehículo todoterreno con tracción de 4 ruedas y garra robótica');
 
--- 4. Tabla de sesiones temporales de invitados (5 minutos)
+-- 4. Tabla de sesiones temporales de invitados (45 segundos)
 CREATE TABLE IF NOT EXISTS sesiones_invitado (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vehiculo_id INT NOT NULL,
@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS sesiones_invitado (
     inicio DATETIME DEFAULT CURRENT_TIMESTAMP,
     expiracion DATETIME NOT NULL,
     activo BOOLEAN DEFAULT TRUE,
+    ocupada BOOLEAN DEFAULT FALSE,
+    accedida_en DATETIME NULL,
+    INDEX idx_sesiones_invitado_vigencia (activo, expiracion),
     FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id_vehiculo) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

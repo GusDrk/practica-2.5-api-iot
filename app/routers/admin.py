@@ -24,11 +24,29 @@ def build_admin_router(db: Database) -> APIRouter:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Credenciales incorrectas o usuario inactivo."
             )
-        return {
+        respuesta = {
             "autenticado": True,
             "usuario": user,
             "token": f"sess_{user['id']}_{user['rol_id']}"
         }
+        if user["rol_id"] == 3:
+            if not payload.guest_token:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="El acceso de invitado requiere un enlace QR activo."
+                )
+            sesion = service.reclamar_sesion_invitado(payload.guest_token)
+            if not sesion:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="El enlace ya fue utilizado, se cerró o expiró."
+                )
+            respuesta["sesion_invitado"] = {
+                "token": payload.guest_token,
+                "vehiculo_id": sesion["vehiculo_id"],
+                "expiracion": sesion["expiracion"].isoformat() + "Z"
+            }
+        return respuesta
 
     @router.get("/usuarios", summary="Obtener lista de usuarios registrados")
     def get_usuarios():
@@ -215,16 +233,23 @@ def build_admin_router(db: Database) -> APIRouter:
             raise HTTPException(status_code=500, detail=f"Error al obtener auditoría: {str(e)}")
 
     # ─────────────────────────────────────────────────────────────
-    # SESIÓN DE INVITADO CON QR (15 SEGUNDOS)
+    # SESIÓN DE INVITADO EXCLUSIVA CON QR (45 SEGUNDOS)
     # ─────────────────────────────────────────────────────────────
     @router.post("/invitado/sesion", summary="Generar sesión de prueba de invitado con QR (45s)")
     def crear_sesion_invitado(payload: InvitadoReservaRequest):
         try:
             return service.crear_sesion_invitado(
                 vehiculo_id=payload.vehiculo_id,
-                duracion_segundos=payload.duracion_segundos or 45
+                duracion_segundos=45
             )
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error al crear sesión de invitado: {str(e)}")
+
+    @router.post("/invitado/sesion/{token}/cerrar", summary="Cerrar la sesión temporal de invitado")
+    def cerrar_sesion_invitado(token: str):
+        service.cerrar_sesion_invitado(token)
+        return {"cerrada": True}
 
     return router

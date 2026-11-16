@@ -1602,3 +1602,140 @@ input:checked + .slider:before {
   padding: 2rem;
   box-shadow: var(--shadow-card);
 }
+
+/* ── Ajustes de distribución fluidos ───────────────────────────────
+   Las reglas siguientes evitan que un ancho mínimo de un componente
+   fuerce desplazamiento horizontal en teléfonos pequeños o divididos. */
+.app-header,
+.app-main,
+.view-panel,
+.main-dashboard-grid,
+.movement-section,
+.movement-actions-column,
+.monitoring-section,
+.card,
+.mon-highlight-content,
+.mon-command-display,
+.mon-command-info,
+.admin-grid,
+.stats-grid {
+  min-width: 0;
+}
+
+.app-header {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.app-main {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.app-title,
+.action-text,
+.mon-command-title,
+.demo-status-text,
+.table-status-message {
+  overflow-wrap: anywhere;
+}
+
+/* Las tarjetas administrativas conservan su diseño, pero nunca exceden
+   el ancho del contenedor disponible. */
+.admin-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+
+.stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+}
+
+.modal-box,
+.login-centered-card {
+  width: min(100%, 440px);
+}
+
+.qr-image-wrapper img {
+  width: min(180px, 100%);
+  height: auto;
+  aspect-ratio: 1;
+}
+
+/* Teléfonos angostos: las pestañas mantienen las tres opciones visibles
+   y los controles conservan áreas táctiles cómodas. */
+@media (max-width: 399px) {
+  .app-header { gap: 0.55rem; }
+
+  .app-logo { gap: 0.45rem; }
+  .app-logo-icon { width: 32px; height: 32px; }
+  .app-title { font-size: 0.9rem; }
+  .app-subtitle { font-size: 0.65rem; }
+
+  .ws-badge { padding: 0.28rem 0.5rem; font-size: 0.66rem; }
+  .header-logout { padding: 0.28rem 0.45rem; }
+
+  .app-navigation { gap: 0.1rem; }
+  .nav-tab {
+    min-width: 0;
+    gap: 0.25rem;
+    padding: 0.48rem 0.25rem;
+    font-size: clamp(0.64rem, 3.2vw, 0.76rem);
+  }
+
+  .card { padding: 0.9rem; }
+  #joystick-container { width: min(58vw, 185px); height: min(58vw, 185px); }
+  .joystick-thumb { width: min(19vw, 62px); height: min(19vw, 62px); }
+
+  .mon-command-display { align-items: flex-start; gap: 0.75rem; }
+  .mon-command-icon { width: 48px; height: 48px; font-size: 1.55rem; }
+  .mon-command-title { font-size: clamp(1.1rem, 6vw, 1.45rem); }
+  .mon-timestamp-box { grid-template-columns: 1fr; }
+}
+
+/* Entre teléfono grande y tableta se conserva el bloque de operación en
+   dos columnas, pero monitoreo baja completo: así ningún panel se aplasta. */
+@media (min-width: 600px) and (max-width: 839px) {
+  .main-dashboard-grid {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
+/* El panel completo sólo se divide en dos columnas cuando ambas zonas
+   tienen espacio suficiente para joystick, acciones y telemetría. */
+@media (min-width: 840px) {
+  .main-dashboard-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 1fr) !important;
+  }
+}
+
+/* En horizontal con poca altura, el encabezado puede ocupar dos renglones
+   en vez de desbordarse fuera de la pantalla. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .app-header {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .app-navigation {
+    order: 3;
+    width: 100%;
+  }
+
+  .main-dashboard-grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) !important;
+  }
+
+  .movement-section {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 599px) and (orientation: landscape) {
+  .main-dashboard-grid,
+  .movement-section {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}

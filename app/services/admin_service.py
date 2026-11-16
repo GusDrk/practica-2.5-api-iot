@@ -1,5 +1,4 @@
 import secrets
-from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from app.database.mysql import Database
 from app.utils.password import hash_password, verify_password
@@ -270,24 +269,102 @@ class AdminService:
             return self.db.fetch_all(sql)
 
     # ─────────────────────────────────────────────────────────────
-    # SESIÓN DE INVITADO CON QR (15 SEGUNDOS)
+    # SESIÓN DE INVITADO EXCLUSIVA CON QR (45 SEGUNDOS)
     # ─────────────────────────────────────────────────────────────
     def crear_sesion_invitado(self, vehiculo_id: int, duracion_segundos: int = 45) -> Dict[str, Any]:
-        token = secrets.token_urlsafe(16)
-        inicio = datetime.utcnow()
-        expiracion = inicio + timedelta(seconds=duracion_segundos)
+        """Crea la única ventana de acceso de invitado que puede estar activa.
 
-        sql = """
-            INSERT INTO sesiones_invitado (vehiculo_id, token, duracion_segundos, inicio, expiracion, activo)
-            VALUES (%s, %s, %s, %s, %s, 1)
+        La comprobación y el INSERT comparten una transacción para evitar que
+        dos solicitudes simultáneas generen dos QR válidos.
         """
-        self.db.execute(sql, vehiculo_id, token, duracion_segundos,
-                        inicio.strftime("%Y-%m-%d %H:%M:%S"),
-                        expiracion.strftime("%Y-%m-%d %H:%M:%S"))
+        token = secrets.token_urlsafe(16)
+        duracion_segundos = 45
+
+        with self.db.connection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            bloqueo_obtenido = False
+            try:
+                # El candado de MySQL serializa la comprobación aun si la tabla
+                # todavía no tiene filas que puedan bloquearse con FOR UPDATE.
+                cursor.execute("SELECT GET_LOCK('iot_guest_session_create', 5) AS bloqueado")
+                bloqueo_obtenido = cursor.fetchone()["bloqueado"] == 1
+                if not bloqueo_obtenido:
+                    raise ValueError("No se pudo reservar la sesión de invitado. Inténtalo de nuevo.")
+
+                # Las sesiones vencidas dejan de bloquear una nueva invitación.
+                cursor.execute("""
+                    UPDATE sesiones_invitado
+                    SET activo = 0
+                    WHERE activo = 1 AND expiracion <= UTC_TIMESTAMP()
+                """)
+                cursor.execute("""
+                    SELECT id
+                    FROM sesiones_invitado
+                    WHERE activo = 1 AND expiracion > UTC_TIMESTAMP()
+                    LIMIT 1
+                    FOR UPDATE
+                """)
+                if cursor.fetchone():
+                    raise ValueError("Ya hay una sesión de invitado activa. Debe cerrarse o esperar a que termine.")
+
+                cursor.execute("""
+                    INSERT INTO sesiones_invitado
+                        (vehiculo_id, token, duracion_segundos, inicio, expiracion, activo, ocupada)
+                    VALUES
+                        (%s, %s, %s, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL %s SECOND), 1, 0)
+                """, (vehiculo_id, token, duracion_segundos, duracion_segundos))
+                cursor.execute("""
+                    SELECT expiracion
+                    FROM sesiones_invitado
+                    WHERE id = LAST_INSERT_ID()
+                """)
+                sesion = cursor.fetchone()
+            finally:
+                # El INSERT debe confirmarse antes de que otra petición pueda
+                # revisar si existe una sesión activa.
+                if bloqueo_obtenido and 'sesion' in locals():
+                    conn.commit()
+                if bloqueo_obtenido:
+                    cursor.execute("SELECT RELEASE_LOCK('iot_guest_session_create')")
+                cursor.close()
 
         return {
             "vehiculo_id": vehiculo_id,
             "token": token,
             "duracion_segundos": duracion_segundos,
-            "expiracion": expiracion.isoformat() + "Z"
+            "expiracion": sesion["expiracion"].isoformat() + "Z"
         }
+
+    def reclamar_sesion_invitado(self, token: str) -> Optional[Dict[str, Any]]:
+        """Marca el QR como usado sólo si sigue vigente y nadie lo reclamó."""
+        with self.db.connection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            try:
+                cursor.execute("""
+                    UPDATE sesiones_invitado
+                    SET ocupada = 1, accedida_en = UTC_TIMESTAMP()
+                    WHERE token = %s
+                      AND activo = 1
+                      AND ocupada = 0
+                      AND expiracion > UTC_TIMESTAMP()
+                """, (token,))
+                if cursor.rowcount != 1:
+                    return None
+
+                cursor.execute("""
+                    SELECT vehiculo_id, expiracion
+                    FROM sesiones_invitado
+                    WHERE token = %s
+                """, (token,))
+                return cursor.fetchone()
+            finally:
+                cursor.close()
+
+    def cerrar_sesion_invitado(self, token: str) -> bool:
+        """Libera la reserva al cerrar sesión; no permite reutilizar el QR."""
+        sql = """
+            UPDATE sesiones_invitado
+            SET activo = 0
+            WHERE token = %s AND activo = 1
+        """
+        return self.db.execute(sql, token).get("rowcount", 0) == 1

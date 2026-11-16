@@ -14,6 +14,7 @@ export class AdminView {
   #currentUser = null;
   #guestTimerInterval = null;
   #userGuestTimerInterval = null;
+  #guestAccessTimerInterval = null;
 
   constructor() {
     this.#loadSession();
@@ -25,7 +26,14 @@ export class AdminView {
     try {
       const saved = localStorage.getItem('iot_user');
       if (saved) {
-        this.#currentUser = JSON.parse(saved);
+        const user = JSON.parse(saved);
+        const expiresAt = new Date(user?.guest_session?.expiracion || 0).getTime();
+        if (user?.rol_id === 3 && (!expiresAt || expiresAt <= Date.now())) {
+          localStorage.removeItem('iot_user');
+          localStorage.removeItem('iot_token');
+        } else {
+          this.#currentUser = user;
+        }
       }
     } catch (_) {}
   }
@@ -173,13 +181,6 @@ export class AdminView {
       });
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // EVENTOS: INVITADO
-    // ─────────────────────────────────────────────────────────────
-    const btnActivarInvitado = document.getElementById('btn-activar-sesion-invitado');
-    if (btnActivarInvitado) {
-      btnActivarInvitado.addEventListener('click', () => this.#handleActivarDirectoInvitado());
-    }
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -233,12 +234,13 @@ export class AdminView {
     // Mostrar suite según rol
     if (adminSuite) adminSuite.classList.toggle('d-none', rolId !== 1);
     if (userSuite) userSuite.classList.toggle('d-none', rolId !== 2);
-    if (guestSuite) guestSuite.classList.add('d-none');
+    if (guestSuite) guestSuite.classList.toggle('d-none', rolId !== 3);
 
     window.dispatchEvent(new CustomEvent('auth:changed', { detail: { user: this.#currentUser } }));
 
     // Cargar datos correspondientes
     this.refreshCurrentRoleData();
+    if (rolId === 3) this.#iniciarTemporizadorInvitado();
   }
 
   async refreshCurrentRoleData() {
@@ -280,10 +282,11 @@ export class AdminView {
     if (submitBtn) submitBtn.disabled = true;
 
     try {
+      const guestToken = new URLSearchParams(window.location.search).get('token');
       const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, guest_token: guestToken })
       });
 
       if (!resp.ok) {
@@ -293,6 +296,11 @@ export class AdminView {
 
       const data = await resp.json();
       this.#currentUser = data.usuario;
+      if (data.sesion_invitado) {
+        this.#currentUser.guest_session = data.sesion_invitado;
+        // El enlace de un solo uso no queda visible ni se comparte al navegar.
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
       localStorage.setItem('iot_user', JSON.stringify(this.#currentUser));
       if (data.token) localStorage.setItem('iot_token', data.token);
 
@@ -305,14 +313,21 @@ export class AdminView {
     }
   }
 
-  #handleLogout() {
+  async #handleLogout(mensaje = 'Sesión finalizada') {
+    const guestToken = this.#currentUser?.guest_session?.token;
     this.#currentUser = null;
     localStorage.removeItem('iot_user');
     localStorage.removeItem('iot_token');
     if (this.#guestTimerInterval) clearInterval(this.#guestTimerInterval);
     if (this.#userGuestTimerInterval) clearInterval(this.#userGuestTimerInterval);
+    if (this.#guestAccessTimerInterval) clearInterval(this.#guestAccessTimerInterval);
     this.renderRoleView();
-    showToast('Sesión finalizada', 'info');
+    if (guestToken) {
+      fetch(`${CONFIG.API_BASE_URL}/admin/invitado/sesion/${encodeURIComponent(guestToken)}/cerrar`, {
+        method: 'POST', keepalive: true
+      }).catch(() => {});
+    }
+    showToast(mensaje, 'info');
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -917,39 +932,29 @@ export class AdminView {
     } catch (_) {}
   }
 
-  async #handleActivarDirectoInvitado() {
+  #iniciarTemporizadorInvitado() {
     const container = document.getElementById('guest-direct-timer-container');
     const display = document.getElementById('guest-direct-countdown');
     const bar = document.getElementById('guest-direct-progress');
+    const expiracion = new Date(this.#currentUser?.guest_session?.expiracion || 0).getTime();
+    if (!expiracion) return this.#handleLogout('La sesión de invitado no es válida');
 
-    try {
-      const resp = await fetch(`${CONFIG.API_BASE_URL}/admin/invitado/sesion`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vehiculo_id: 1, duracion_segundos: 45 })
-      });
-      if (!resp.ok) throw new Error('Fallo al activar sesión de invitado');
+    if (this.#guestAccessTimerInterval) clearInterval(this.#guestAccessTimerInterval);
+    if (container) container.classList.remove('d-none');
 
-      showToast('¡Sesión de prueba de 45 segundos activada! Puedes operar la unidad.', 'success');
-      if (container) container.classList.remove('d-none');
+    const actualizar = () => {
+      const restante = Math.max(0, Math.ceil((expiracion - Date.now()) / 1000));
+      if (display) display.textContent = `${restante}s`;
+      if (bar) bar.style.width = `${(restante / 45) * 100}%`;
+      if (restante > 0) return;
 
-      let restante = 45;
-      const duracion = 45;
+      clearInterval(this.#guestAccessTimerInterval);
+      this.#guestAccessTimerInterval = null;
+      this.#handleLogout('La sesión de invitado expiró automáticamente');
+    };
 
-      const intId = setInterval(() => {
-        restante--;
-        if (display) display.textContent = `${restante}s`;
-        if (bar) bar.style.width = `${(restante / duracion) * 100}%`;
-
-        if (restante <= 0) {
-          clearInterval(intId);
-          if (display) display.textContent = '0s (Expirado)';
-          showToast('La sesión de prueba de 45 segundos ha finalizado.', 'warning');
-        }
-      }, 1000);
-    } catch (err) {
-      showToast(err.message, 'danger');
-    }
+    actualizar();
+    this.#guestAccessTimerInterval = setInterval(actualizar, 250);
   }
 
   // ─────────────────────────────────────────────────────────────
