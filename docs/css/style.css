@@ -1790,3 +1790,107 @@ input:checked + .slider:before {
     flex-direction: column !important;
   }
 }
+
+/* ── Control: distribución de gamepad en cualquier pantalla ──
+   El joystick y las acciones conservan sus dos columnas incluso en teléfonos.
+   Los elementos se reducen gradualmente en lugar de apilarse. */
+#view-control .movement-section {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  align-items: stretch !important;
+}
+
+#view-control .joystick-card,
+#view-control .movement-actions-column,
+#view-control .secondary-card {
+  min-width: 0;
+}
+
+#view-control #joystick-container {
+  width: clamp(94px, 32vw, 195px);
+  height: clamp(94px, 32vw, 195px);
+}
+
+#view-control .joystick-thumb {
+  width: clamp(32px, 10.5vw, 68px);
+  height: clamp(32px, 10.5vw, 68px);
+}
+
+@media (max-width: 599px) {
+  #view-control .movement-section {
+    gap: 0.5rem !important;
+  }
+
+  #view-control .joystick-card,
+  #view-control .secondary-card,
+  #view-control .stop-card {
+    padding: 0.65rem;
+  }
+
+  #view-control .movement-actions-column {
+    gap: 0.5rem !important;
+  }
+
+  #view-control .card-title {
+    margin-bottom: 0.5rem;
+    font-size: clamp(0.56rem, 2.5vw, 0.75rem);
+    letter-spacing: 0.04em;
+  }
+
+  #view-control .secondary-buttons {
+    gap: 0.3rem !important;
+  }
+
+  #view-control .btn-secondary {
+    min-width: 0;
+    min-height: 42px;
+    padding: 0.35rem 0.15rem;
+  }
+
+  #view-control .btn-icon {
+    font-size: clamp(0.92rem, 5vw, 1.4rem);
+  }
+
+  #view-control .btn-stop {
+    min-width: 0;
+    padding: 0.55rem 0.35rem;
+    font-size: clamp(0.76rem, 3.8vw, 0.95rem);
+  }
+
+  #view-control .joystick-hint-text,
+  #view-control .gyroscope-help {
+    font-size: clamp(0.56rem, 2.4vw, 0.72rem);
+  }
+
+  #view-control .btn-outline-custom {
+    min-width: 0;
+    padding: 0.38rem;
+    font-size: clamp(0.61rem, 2.8vw, 0.78rem);
+  }
+}
+
+/* En anchos reducidos las acciones conservan su posición: se muestran como
+   iconos y el botón de control por manos mantiene su texto identificable. */
+@media (max-width: 479px) {
+  #view-control .secondary-buttons .btn-secondary:not(.btn-hand-movement) .btn-label {
+    display: none;
+  }
+
+  #view-control .btn-hand-movement {
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    min-height: 48px;
+  }
+
+  #view-control .btn-hand-movement .btn-label {
+    font-size: clamp(0.55rem, 2.6vw, 0.68rem);
+  }
+
+  #view-control .btn-coming-soon {
+    display: none;
+  }
+
+  #view-control .joystick-hints {
+    display: none;
+  }
+}
