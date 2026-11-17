@@ -410,27 +410,11 @@
         <form id="admin-login-form">
           <div class="form-group-custom">
             <label for="login-email"><i class="bi bi-person-fill text-primary"></i> Usuario</label>
-            <input type="text" id="login-email" class="form-control-custom" placeholder="admin / usuario / invitado" required autocomplete="username">
+            <input type="text" id="login-email" class="form-control-custom" placeholder="Usuario o correo electrónico" required autocomplete="username">
           </div>
           <div class="form-group-custom">
             <label for="login-password"><i class="bi bi-key-fill text-primary"></i> Contraseña</label>
             <input type="password" id="login-password" class="form-control-custom" placeholder="••••••••" required autocomplete="current-password">
-          </div>
-
-          <!-- Botones de acceso rápido para pruebas -->
-          <div class="mb-3">
-            <small class="text-muted d-block mb-1">Accesos rápidos:</small>
-            <div class="d-flex flex-wrap gap-1">
-              <button type="button" class="btn-outline-custom" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;" onclick="document.getElementById('login-email').value='admin'; document.getElementById('login-password').value='admin12345';">
-                Admin (admin12345)
-              </button>
-              <button type="button" class="btn-outline-custom" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;" onclick="document.getElementById('login-email').value='usuario'; document.getElementById('login-password').value='usuario12345';">
-                Usuario (usuario12345)
-              </button>
-              <button type="button" class="btn-outline-custom" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;" onclick="document.getElementById('login-email').value='invitado'; document.getElementById('login-password').value='invitado12345';">
-                Invitado (invitado12345)
-              </button>
-            </div>
           </div>
 
           <button type="submit" class="btn-primary-custom w-100 mt-2">
