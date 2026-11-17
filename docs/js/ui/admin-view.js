@@ -32,6 +32,8 @@ export class AdminView {
         if (user?.rol_id === 3 && (!expiresAt || expiresAt <= Date.now())) {
           localStorage.removeItem('iot_user');
           localStorage.removeItem('iot_token');
+          // Una pestaña restaurada nunca debe dejar el vehículo en movimiento.
+          commandService.stop().catch(() => {});
         } else {
           this.#currentUser = user;
         }
@@ -354,12 +356,17 @@ export class AdminView {
 
   async #handleLogout(mensaje = 'Sesión finalizada') {
     const guestToken = this.#currentUser?.guest_session?.token;
+    const esSesionInvitado = this.#currentUser?.rol_id === 3;
     this.#currentUser = null;
     localStorage.removeItem('iot_user');
     localStorage.removeItem('iot_token');
     if (this.#guestTimerInterval) clearInterval(this.#guestTimerInterval);
     if (this.#userGuestTimerInterval) clearInterval(this.#userGuestTimerInterval);
     if (this.#guestAccessTimerInterval) clearInterval(this.#guestAccessTimerInterval);
+    if (esSesionInvitado) {
+      // Los controles de conducción escuchan este evento y pasan a estado seguro.
+      window.dispatchEvent(new CustomEvent('guest:session:ended'));
+    }
     this.renderRoleView();
     if (guestToken) {
       fetch(`${CONFIG.API_BASE_URL}/admin/invitado/sesion/${encodeURIComponent(guestToken)}/cerrar`, {

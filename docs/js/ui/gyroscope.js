@@ -25,6 +25,9 @@ export class GyroscopeControl {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) this.#stop();
     });
+    // La expiración o el cierre de una sesión de invitado deshabilita de forma
+    // explícita el sensor y emite DETENER, aunque no hubiera inclinación activa.
+    window.addEventListener('guest:session:ended', () => this.#disable(true));
   }
 
   async #toggle() {
@@ -54,9 +57,9 @@ export class GyroscopeControl {
     }
   }
 
-  #disable() {
+  #disable(forceStop = false) {
     this.#enabled = false;
-    this.#stop();
+    this.#stop(forceStop);
     this.#button.classList.remove('is-active');
     this.#button.setAttribute('aria-pressed', 'false');
     this.#button.innerHTML = '<i class="bi bi-phone"></i> Activar giroscopio';
@@ -79,8 +82,8 @@ export class GyroscopeControl {
     else commandService.stop().catch(() => {});
   }
 
-  #stop() {
-    if (!this.#enabled && this.#direction === null) return;
+  #stop(force = false) {
+    if (!force && !this.#enabled && this.#direction === null) return;
     this.#direction = null;
     commandService.stop().catch(() => {});
   }

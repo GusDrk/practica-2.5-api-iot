@@ -407,14 +407,16 @@
           <p class="text-muted small">Inicia sesión con tu cuenta para acceder a las funciones correspondientes a tu rol.</p>
         </div>
 
-        <form id="admin-login-form">
+        <!-- La cuenta temporal es la única que se precarga. Se desactivan las
+             sugerencias guardadas del navegador para no exponer otras cuentas. -->
+        <form id="admin-login-form" autocomplete="off">
           <div class="form-group-custom">
             <label for="login-email"><i class="bi bi-person-fill text-primary"></i> Usuario</label>
-            <input type="text" id="login-email" class="form-control-custom" placeholder="Usuario o correo electrónico" required autocomplete="username">
+            <input type="text" id="login-email" class="form-control-custom" placeholder="Usuario o correo electrónico" required autocomplete="off" value="invitado@iot.com">
           </div>
           <div class="form-group-custom">
             <label for="login-password"><i class="bi bi-key-fill text-primary"></i> Contraseña</label>
-            <input type="password" id="login-password" class="form-control-custom" placeholder="••••••••" required autocomplete="current-password">
+            <input type="password" id="login-password" class="form-control-custom" placeholder="••••••••" required autocomplete="off" value="invitado12345">
           </div>
 
           <button type="submit" class="btn-primary-custom w-100 mt-2">
