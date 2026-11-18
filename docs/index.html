@@ -183,6 +183,18 @@
                 </button>
 
                 <button
+                  id="btn-control-voz"
+                  class="btn-secondary btn-voice-control"
+                  type="button"
+                  aria-haspopup="dialog"
+                  aria-controls="voice-control-modal"
+                  title="Controlar el vehículo por voz"
+                >
+                  <span class="btn-icon" aria-hidden="true">🎙️</span>
+                  <span class="btn-label">Control<br>por voz</span>
+                </button>
+
+                <button
                   id="btn-movimiento-manos"
                   class="btn-secondary btn-hand-movement"
                   type="button"
@@ -952,8 +964,36 @@
   <!-- Contenedor de notificaciones toast -->
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
+  <!-- Control por voz: se mantiene abierto hasta que el operador lo termine. -->
+  <div id="voice-control-modal" class="modal-overlay voice-modal" role="dialog" aria-modal="true" aria-labelledby="voice-modal-title" hidden>
+    <div class="modal-box voice-modal-box">
+      <div class="modal-header-custom">
+        <div>
+          <h2 id="voice-modal-title" class="voice-modal-title"><i class="bi bi-mic-fill" aria-hidden="true"></i> Control por voz</h2>
+          <p class="voice-modal-subtitle">Di una o varias acciones y sus duraciones.</p>
+        </div>
+      </div>
+
+      <div id="voice-status" class="voice-status" role="status" aria-live="polite">
+        Preparando micrófono…
+      </div>
+      <p id="voice-transcript" class="voice-transcript" aria-live="polite">Aún no se ha detectado una instrucción.</p>
+      <p class="voice-example"><strong>Ejemplo:</strong> “Ve hacia adelante 5 segundos y después a la derecha 2 segundos”.</p>
+      <p class="voice-help">También puedes decir: atrás, izquierda, derecha, subir o bajar garra, y bocina. Di “detener” para cancelar la secuencia actual.</p>
+
+      <div class="voice-modal-actions">
+        <button id="btn-voice-retry" class="btn-outline-custom" type="button">
+          <i class="bi bi-mic" aria-hidden="true"></i> Escuchar de nuevo
+        </button>
+        <button id="btn-voice-finish" class="btn-voice-finish" type="button">
+          <i class="bi bi-stop-fill" aria-hidden="true"></i> Terminar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Módulo JS principal (ES6 modules) -->
-  <script type="module" src="./js/app.js?v=4.9"></script>
+  <script type="module" src="./js/app.js?v=5.0"></script>
 
 </body>
 </html>

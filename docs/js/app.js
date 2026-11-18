@@ -10,6 +10,7 @@ import { monitoringService } from './domain/monitoring.js';
 import { Joystick }         from './ui/joystick.js';
 import { GyroscopeControl } from './ui/gyroscope.js';
 import { SecondaryButtons } from './ui/buttons.js';
+import { VoiceControl }     from './ui/voice-control.js';
 import { ConnectivityPanel } from './ui/connectivity.js';
 import { DemoPanel }        from './ui/demo-panel.js';
 import { Navigation }       from './ui/navigation.js';
@@ -49,6 +50,9 @@ function init() {
 
   // 7. Botones secundarios (Garra, Bocina)
   new SecondaryButtons();
+
+  // 7.1 Control por voz y secuencias temporizadas
+  new VoiceControl();
 
   // 8. Panel de DEMOs
   new DemoPanel();
