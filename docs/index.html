@@ -198,13 +198,14 @@
                   id="btn-movimiento-manos"
                   class="btn-secondary btn-hand-movement"
                   type="button"
-                  disabled
                   aria-describedby="hand-movement-status"
-                  title="Control por movimiento de manos — próximamente"
+                  aria-haspopup="dialog"
+                  aria-controls="hand-control-modal"
+                  title="Controlar el vehículo con señas"
                 >
                   <span class="btn-icon" aria-hidden="true">🖐️</span>
-                  <span class="btn-label">Control por movimiento de manos</span>
-                  <span id="hand-movement-status" class="btn-coming-soon">Próximamente</span>
+                  <span class="btn-label">Control<br>por señas</span>
+                  <span id="hand-movement-status" class="btn-coming-soon">Cámara</span>
                 </button>
               </div>
             </div>
@@ -992,8 +993,29 @@
     </div>
   </div>
 
+  <div id="hand-control-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="hand-control-title" hidden>
+    <section class="modal-box hand-control-box">
+      <div class="modal-header-custom">
+        <div>
+          <h2 id="hand-control-title" class="voice-modal-title">Control por señas</h2>
+          <p class="voice-modal-subtitle">Permite la cámara y activa el control para comenzar.</p>
+        </div>
+        <button id="btn-hand-close" class="modal-close-btn" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <video id="hand-camera" class="hand-camera" autoplay playsinline muted></video>
+      <canvas id="hand-overlay" class="hand-overlay" aria-hidden="true"></canvas>
+      <p id="hand-control-status" class="voice-status" role="status" aria-live="polite">Control desactivado</p>
+      <div class="hand-control-actions">
+        <button id="btn-hand-start" class="btn-primary-custom" type="button">Iniciar cámara</button>
+        <button id="btn-hand-arm" class="btn-outline-custom" type="button" disabled>Activar control</button>
+        <button id="btn-hand-stop" class="btn-voice-finish" type="button">Detener</button>
+      </div>
+      <p class="voice-help">Índice: avanzar · índice y medio: retroceder · pulgar izquierda/derecha: girar · pulgar arriba/abajo: garra · puño: bocina · palma abierta: detener.</p>
+    </section>
+  </div>
+
   <!-- Módulo JS principal (ES6 modules) -->
-  <script type="module" src="./js/app.js?v=5.0"></script>
+  <script type="module" src="./js/app.js?v=5.1"></script>
 
 </body>
 </html>

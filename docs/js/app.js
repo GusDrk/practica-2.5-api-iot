@@ -11,6 +11,7 @@ import { Joystick }         from './ui/joystick.js';
 import { GyroscopeControl } from './ui/gyroscope.js';
 import { SecondaryButtons } from './ui/buttons.js';
 import { VoiceControl }     from './ui/voice-control.js';
+import { HandControl }      from './ui/hand-control.js';
 import { ConnectivityPanel } from './ui/connectivity.js';
 import { DemoPanel }        from './ui/demo-panel.js';
 import { Navigation }       from './ui/navigation.js';
@@ -53,6 +54,7 @@ function init() {
 
   // 7.1 Control por voz y secuencias temporizadas
   new VoiceControl();
+  new HandControl();
 
   // 8. Panel de DEMOs
   new DemoPanel();

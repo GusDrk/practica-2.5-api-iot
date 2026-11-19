@@ -1449,6 +1449,26 @@ input:checked + .slider:before {
   max-width: 540px;
 }
 
+.hand-control-box { max-width: 620px; }
+.hand-camera {
+  display: block;
+  width: 100%;
+  max-height: 52vh;
+  object-fit: cover;
+  transform: scaleX(-1);
+  border-radius: var(--radius-sm);
+  background: #000;
+}
+.hand-overlay { display: none; }
+.hand-control-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.8rem 0;
+}
+.hand-control-actions button { min-height: 44px; }
+.btn-hand-movement { border-color: rgba(34, 197, 94, 0.4); }
+
 .voice-modal-title {
   margin: 0;
   font-size: 1.2rem;
