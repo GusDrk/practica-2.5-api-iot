@@ -2,7 +2,7 @@ import { commandService } from '../domain/commands.js';
 import { COMMANDS } from '../config.js';
 
 const TASKS_VERSION = '0.10.22';
-const WASM_URL = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${TASKS_VERSION}/wasm`;
+const WASM_URL = `https://unpkg.com/@mediapipe/tasks-vision@${TASKS_VERSION}/wasm`;
 const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 
 const GESTURES = {
@@ -85,7 +85,12 @@ export class HandControl {
       });
       this.#video.srcObject = this.#stream;
       await this.#video.play();
-      const vision = await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${TASKS_VERSION}/+esm`);
+      let vision;
+      try {
+        vision = await import(`https://unpkg.com/@mediapipe/tasks-vision@${TASKS_VERSION}/vision_bundle.mjs`);
+      } catch (error) {
+        throw new Error(`No se pudo cargar MediaPipe desde el CDN. Revisa tu conexión o bloqueadores de contenido. (${error.message})`);
+      }
       const files = await vision.FilesetResolver.forVisionTasks(WASM_URL);
       this.#landmarker = await vision.HandLandmarker.createFromOptions(files, {
         baseOptions: { modelAssetPath: MODEL_URL, delegate: 'GPU' },
